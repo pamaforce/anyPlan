@@ -1,9 +1,14 @@
-import Vue from 'vue'
-import App from './App.vue'
-import './utils/rem'
+import Vue from "vue";
+import App from "./App.vue";
+import "./utils/rem";
+import "splitpanes/dist/splitpanes.css";
+import Contextmenu from "vue-contextmenujs";
+import { Dialog, Button } from "element-ui";
+Vue.use(Dialog);
+Vue.use(Button);
+Vue.use(Contextmenu);
 
-Vue.config.productionTip = false
-
+Vue.config.productionTip = false;
 new Vue({
-    render: h => h(App),
-}).$mount('#app')
+    render: (h) => h(App),
+}).$mount("#app");

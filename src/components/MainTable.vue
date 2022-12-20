@@ -1,5 +1,5 @@
 <template>
-  <div class="main-table">
+  <div class="main-table" ref="table">
     <div class="table-header">
       <div
         :class="['sup-prev-cell', { ani: needAni }]"
@@ -48,68 +48,70 @@
         </p>
       </div>
     </div>
-    <div
-      class="table-body-item"
-      v-for="(aspect, j) in goalTable.goalTree"
-      :key="j"
-    >
+    <div class="table-body-wrapper" @scroll="handleScroll()" ref="tableBody">
       <div
-        :class="['body-sup-prev-cell', { ani: needAni }]"
-        :ref="'supPrevCellBody' + j"
-        v-for="(item, i) in supPrevListBody[j]"
-        :key="'supPrevBody' + j + i"
-        :title="item.text"
+        class="table-body-item"
+        v-for="(aspect, j) in data.goalTree"
+        :key="j"
       >
-        <p>
-          {{ item.text }}
-        </p>
-      </div>
-      <div
-        :class="['body-sup-cell', { ani: needAni, border: needAni }]"
-        :ref="'supCellBody' + j"
-        v-for="(item, i) in supListBody[j]"
-        :key="'supBody' + j + i"
-        :title="item.text"
-        @click="clickItem('up', j, i)"
-      >
-        <p v-if="!item.showInput">
-          {{ item.text }}
-        </p>
-        <input
-          v-else
-          v-model="item.text"
-          @blur="blurItem('up', j, i)"
-          @keyup.enter="blurItem('up', j, i)"
-        />
-      </div>
-      <div
-        :class="['body-sub-cell', { ani: needAni }]"
-        v-for="(item, i) in subListBody[j]"
-        :key="'subBody' + j + i"
-        :ref="'subCellBody' + j"
-        :title="item.text"
-        @click="clickItem('down', j, i)"
-      >
-        <p v-if="!item.showInput">
-          {{ item.text }}
-        </p>
-        <input
-          v-else
-          v-model="item.text"
-          @blur="blurItem('down', j, i)"
-          @keyup.enter="blurItem('down', j, i)"
-        />
-      </div>
-      <div
-        :class="['body-sub-next-cell', { ani: needAni }]"
-        v-for="(item, i) in subNextListBody[j]"
-        :key="'subNextBody' + j + i"
-        :ref="'subNextCellBody' + j"
-        :title="item.text"
-      >
-        <p>
-          {{ item.text }}
-        </p>
+        <div
+          :class="['body-sup-prev-cell', { ani: needAni }]"
+          :ref="'supPrevCellBody' + j"
+          v-for="(item, i) in supPrevListBody[j]"
+          :key="'supPrevBody' + j + i"
+          :title="item.text"
+        >
+          <p>
+            {{ item.text }}
+          </p>
+        </div>
+        <div
+          :class="['body-sup-cell', { ani: needAni, border: needAni }]"
+          :ref="'supCellBody' + j"
+          v-for="(item, i) in supListBody[j]"
+          :key="'supBody' + j + i"
+          :title="item.text"
+          @click="clickItem('up', j, i)"
+        >
+          <p v-if="!item.showInput">
+            {{ item.text }}
+          </p>
+          <input
+            v-else
+            v-model="item.text"
+            @blur="blurItem('up', j, i)"
+            @keyup.enter="blurItem('up', j, i)"
+          />
+        </div>
+        <div
+          :class="['body-sub-cell', { ani: needAni }]"
+          v-for="(item, i) in subListBody[j]"
+          :key="'subBody' + j + i"
+          :ref="'subCellBody' + j"
+          :title="item.text"
+          @click="clickItem('down', j, i)"
+        >
+          <p v-if="!item.showInput">
+            {{ item.text }}
+          </p>
+          <input
+            v-else
+            v-model="item.text"
+            @blur="blurItem('down', j, i)"
+            @keyup.enter="blurItem('down', j, i)"
+          />
+        </div>
+        <div
+          :class="['body-sub-next-cell', { ani: needAni }]"
+          v-for="(item, i) in subNextListBody[j]"
+          :key="'subNextBody' + j + i"
+          :ref="'subNextCellBody' + j"
+          :title="item.text"
+        >
+          <p>
+            {{ item.text }}
+          </p>
+        </div>
       </div>
     </div>
   </div>
@@ -118,9 +120,19 @@
 <script>
 export default {
   name: "MainTable",
+  props: {
+    data: {
+      type: Object,
+      default: () => ({
+        aspect: [],
+        goalTree: [],
+      }),
+    },
+  },
   data: () => ({
     //初始深度
     currentDepth: 8,
+    tableWidth: 120,
     //出生日期时间戳
     initialTimeStamp: 539452800000,
     supList: [],
@@ -131,15 +143,12 @@ export default {
     supPrevListBody: [],
     subListBody: [],
     subNextListBody: [],
-    goalTable: {
-      aspect: [],
-      goalTree: [],
-    },
     indexList: [0],
     needAni: false,
     birth: null,
     birthYear: "",
     changeNum: ["零", "一", "二", "三", "四", "五", "六", "七", "八", "九"],
+    canInput: true,
   }),
   methods: {
     //点击Header底部事件处理
@@ -150,7 +159,7 @@ export default {
       this.indexList.push(val);
       this.subNextList = this.fetchHeaderData(this.currentDepth - 1);
       this.needAni = false;
-      let width = 120;
+      let width = this.tableWidth;
       let supWidth = width * this.subList.length;
       let subWidth = width / this.subList.length;
       let nextWidth =
@@ -230,7 +239,7 @@ export default {
       this.currentDepth++;
       this.supPrevList = this.fetchHeaderData(this.currentDepth);
       this.needAni = false;
-      let width = 120;
+      let width = this.tableWidth;
       let supWidth = width / this.supList.length;
       let subWidth =
         (this.supList[val].span
@@ -452,7 +461,7 @@ export default {
     initHeaderStyle(type, val) {
       this.$nextTick(() => {
         this.needAni = false;
-        let width = 120;
+        let width = this.tableWidth;
         let subWidth = width / this.subList.length;
         let nextWidth = subWidth / this.subNextList.length;
         let prevWidth = width * this.supList.length;
@@ -500,11 +509,11 @@ export default {
     },
     //Body下钻动画
     subBodyToAni(val) {
-      for (let i = 0; i < this.goalTable.goalTree.length; i++) {
+      for (let i = 0; i < this.data.goalTree.length; i++) {
         this.subNextListBody[i] = this.fetchBodyData(this.currentDepth - 1, i);
       }
       this.needAni = false;
-      let width = 120;
+      let width = this.tableWidth;
       let supWidth = width * this.subListBody[0].length;
       let subWidth = width / this.subListBody[0].length;
       let nextWidth =
@@ -523,7 +532,7 @@ export default {
               this.subListBody[0][i].span
             : subWidth;
         }
-        for (let j = 0; j < this.goalTable.goalTree.length; j++) {
+        for (let j = 0; j < this.data.goalTree.length; j++) {
           let leftTotal = 0;
           this.$refs["subNextCellBody" + j]?.map((item, i) => {
             this.$refs["subNextCellBody" + j][i].style.top = "6.4rem";
@@ -547,7 +556,7 @@ export default {
       });
       setTimeout(() => {
         this.needAni = true;
-        for (let j = 0; j < this.goalTable.goalTree.length; j++) {
+        for (let j = 0; j < this.data.goalTree.length; j++) {
           this.$refs["supCellBody" + j]?.map((item, i) => {
             this.$refs["supCellBody" + j][i].style.top = "-3.125rem";
             this.$refs["supCellBody" + j][i].style.width = supWidth + "rem";
@@ -557,7 +566,7 @@ export default {
               "rem";
           });
         }
-        for (let j = 0; j < this.goalTable.goalTree.length; j++) {
+        for (let j = 0; j < this.data.goalTree.length; j++) {
           this.$refs["subCellBody" + j]?.map((item, i) => {
             this.$refs["subCellBody" + j][i].style.top = 0;
             this.$refs["subCellBody" + j][i].style.width = width + "rem";
@@ -565,7 +574,7 @@ export default {
               width * (i - val) + "rem";
           });
         }
-        for (let j = 0; j < this.goalTable.goalTree.length; j++) {
+        for (let j = 0; j < this.data.goalTree.length; j++) {
           let leftTotal = 0;
           this.$refs["subNextCellBody" + j]?.map((item, i) => {
             this.$refs["subNextCellBody" + j][i].style.top = "3.125rem";
@@ -592,11 +601,11 @@ export default {
     },
     //Body上钻动画
     supBodyToAni(val) {
-      for (let i = 0; i < this.goalTable.goalTree.length; i++) {
+      for (let i = 0; i < this.data.goalTree.length; i++) {
         this.supPrevListBody[i] = this.fetchBodyData(this.currentDepth, i);
       }
       this.needAni = false;
-      let width = 120;
+      let width = this.tableWidth;
       let supWidth = width / this.supListBody[0].length;
       let subWidth =
         (this.supListBody[0][val].span
@@ -605,7 +614,7 @@ export default {
           : supWidth) / this.subListBody[0].length;
       let prevWidth = width * this.supListBody[0].length;
       this.$nextTick(() => {
-        for (let j = 0; j < this.goalTable.goalTree.length; j++) {
+        for (let j = 0; j < this.data.goalTree.length; j++) {
           this.$refs["supPrevCellBody" + j]?.map((item, i) => {
             this.$refs["supPrevCellBody" + j][i].style.top = "-3.125rem";
             this.$refs["supPrevCellBody" + j][i].style.width =
@@ -619,7 +628,7 @@ export default {
       });
       setTimeout(() => {
         this.needAni = true;
-        for (let j = 0; j < this.goalTable.goalTree.length; j++) {
+        for (let j = 0; j < this.data.goalTree.length; j++) {
           this.$refs["supPrevCellBody" + j]?.map((item, i) => {
             this.$refs["supPrevCellBody" + j][i].style.top = 0;
             this.$refs["supPrevCellBody" + j][i].style.width = width + "rem";
@@ -669,13 +678,13 @@ export default {
     rebuildBody(type, val) {
       switch (type) {
         case "down":
-          for (let i = 0; i < this.goalTable.goalTree.length; i++) {
+          for (let i = 0; i < this.data.goalTree.length; i++) {
             this.supListBody[i] = this.subListBody[i];
             this.subListBody[i] = this.subNextListBody[i];
           }
           break;
         case "up":
-          for (let i = 0; i < this.goalTable.goalTree.length; i++) {
+          for (let i = 0; i < this.data.goalTree.length; i++) {
             this.subListBody[i] = this.supListBody[i];
             this.supListBody[i] = this.supPrevListBody[i];
           }
@@ -685,7 +694,7 @@ export default {
           break;
       }
       this.$forceUpdate();
-      for (let i = 0; i < this.goalTable.goalTree.length; i++) {
+      for (let i = 0; i < this.data.goalTree.length; i++) {
         this.initBodyStyle(type, i, val);
       }
     },
@@ -693,7 +702,7 @@ export default {
     initBodyStyle(type, row, val) {
       this.$nextTick(() => {
         this.needAni = false;
-        let width = 120;
+        let width = this.tableWidth;
         let subWidth = width / this.subListBody[row].length;
         let nextWidth = subWidth / this.subNextListBody[row]?.length;
         let prevWidth = width * this.supListBody[row].length;
@@ -743,6 +752,7 @@ export default {
         });
       });
     },
+    //获取Body数据
     fetchBodyData(depth, row) {
       let tempList = [],
         tempSum = 0,
@@ -756,7 +766,7 @@ export default {
         case 8:
           return [
             {
-              text: this.goalTable.goalTree[row]?.[0]?.desc ?? "",
+              text: this.data.goalTree[row]?.[0]?.desc ?? "",
               showInput: false,
             },
           ];
@@ -764,7 +774,7 @@ export default {
           tempList = [];
           for (let i = 0; i < 20; i++) {
             tempList.push({
-              text: this.goalTable.goalTree[row]?.[0]?.[i]?.desc ?? "",
+              text: this.data.goalTree[row]?.[0]?.[i]?.desc ?? "",
               showInput: false,
             });
           }
@@ -774,8 +784,8 @@ export default {
           for (let i = 0; i < 5; i++) {
             tempList.push({
               text:
-                this.goalTable.goalTree[row]?.[0]?.[this.indexList[1]]?.[i]
-                  ?.desc ?? "",
+                this.data.goalTree[row]?.[0]?.[this.indexList[1]]?.[i]?.desc ??
+                "",
               showInput: false,
             });
           }
@@ -785,7 +795,7 @@ export default {
           for (let i = 0; i < 4; i++) {
             tempList.push({
               text:
-                this.goalTable.goalTree[row]?.[0]?.[this.indexList[1]]?.[
+                this.data.goalTree[row]?.[0]?.[this.indexList[1]]?.[
                   this.indexList[2]
                 ]?.[i]?.desc ?? "",
               showInput: false,
@@ -797,7 +807,7 @@ export default {
           for (let i = 0; i < 3; i++) {
             tempList.push({
               text:
-                this.goalTable.goalTree[row]?.[0]?.[this.indexList[1]]?.[
+                this.data.goalTree[row]?.[0]?.[this.indexList[1]]?.[
                   this.indexList[2]
                 ]?.[this.indexList[3]]?.[i]?.desc ?? "",
               showInput: false,
@@ -839,7 +849,7 @@ export default {
             ) {
               tempList.push({
                 text:
-                  this.goalTable.goalTree[row]?.[0]?.[this.indexList[1]]?.[
+                  this.data.goalTree[row]?.[0]?.[this.indexList[1]]?.[
                     this.indexList[2]
                   ]?.[this.indexList[3]]?.[this.indexList[4]]?.[tempCnt]
                     ?.desc ?? "",
@@ -864,7 +874,7 @@ export default {
           for (let i = 0; i < tempArr[this.indexList[5]].span; i++) {
             tempList.push({
               text:
-                this.goalTable.goalTree[row]?.[0]?.[this.indexList[1]]?.[
+                this.data.goalTree[row]?.[0]?.[this.indexList[1]]?.[
                   this.indexList[2]
                 ]?.[this.indexList[3]]?.[this.indexList[4]]?.[
                   this.indexList[5]
@@ -878,25 +888,32 @@ export default {
       }
       return tempList;
     },
+    //初始化数据
     initData() {
-      this.goalTable = JSON.parse(
-        window.localStorage.getItem("anyPlanUserData") ||
-          JSON.stringify({
-            aspect: [],
-            goalTree: [{}, {}, {}],
-          })
-      );
-      this.birth = new Date(this.initialTimeStamp);
-      this.birthYear = this.birth.getFullYear();
       this.supList = this.fetchHeaderData(this.currentDepth);
       this.subList = this.fetchHeaderData(this.currentDepth - 1);
-      for (let i = 0; i < this.goalTable.goalTree.length; i++) {
+      for (let i = 0; i < this.data.goalTree.length; i++) {
         this.supListBody[i] = this.fetchBodyData(this.currentDepth, i);
         this.subListBody[i] = this.fetchBodyData(this.currentDepth - 1, i);
+        this.initBodyStyle("down", i, 0);
+      }
+    },
+    //初始化行样式
+    initBodyLine() {
+      for (let i = 0; i < this.data.goalTree.length; i++) {
+        this.supListBody[i] = this.fetchBodyData(this.currentDepth, i);
+        this.subListBody[i] = this.fetchBodyData(this.currentDepth - 1, i);
+        this.initBodyStyle("down", i, 0);
       }
     },
     //点击单元格
     clickItem(type, row, val) {
+      if (!this.canInput) return;
+      this.canInput = false;
+      console.log("-----------");
+      console.log(this.supListBody[row]);
+      console.log("-----------");
+      this.$emit("input", false);
       if (type === "up") {
         this.supListBody[row][val].showInput = true;
       } else {
@@ -910,9 +927,7 @@ export default {
     },
     //输入框失焦
     blurItem(type, row, val) {
-      console.log(this.indexList);
-      console.log(this.currentDepth);
-      let tempObj = this.goalTable.goalTree[row];
+      let tempObj = this.data.goalTree[row];
       for (let i = 0; i <= 8 - this.currentDepth; i++) {
         if (!tempObj[this.indexList[i]]) {
           tempObj[this.indexList[i]] = {
@@ -931,39 +946,57 @@ export default {
         if (!tempObj[val]) tempObj[val] = { desc: "" };
         tempObj[val].desc = this.subListBody[row][val].text;
       }
-      this.$forceUpdate();
-      this.saveData();
+      this.$emit("save");
+      setTimeout(() => {
+        this.canInput = true;
+        this.$emit("input", true);
+      }, 100);
     },
-    saveData() {
-      console.log(this.goalTable);
-      window.localStorage.setItem(
-        "anyPlanUserData",
-        JSON.stringify(this.goalTable)
+    // 更新表格宽度
+    updateTableWidth() {
+      let totalWidth = parseFloat(
+        document.getElementsByTagName("html")[0].style.fontSize.split("px")[0]
       );
+      let tableWidth = this.$refs.table.offsetWidth;
+      this.tableWidth = tableWidth / totalWidth;
+      this.initHeaderStyle("down", 0);
+      for (let i = 0; i < this.data.goalTree.length; i++) {
+        this.initBodyStyle("down", i, 0);
+      }
+    },
+    handleScroll() {
+      this.$emit("scroll", this.$refs.tableBody.scrollTop);
+    },
+    updateScroll(val) {
+      this.$refs.tableBody.scrollTop = val;
     },
   },
   created() {
+    this.$nextTick(() => {
+      this.$nextTick(() => {
+        this.updateTableWidth();
+      });
+    });
+    this.birth = new Date(this.initialTimeStamp);
+    this.birthYear = this.birth.getFullYear();
     this.initData();
-  },
-  mounted() {
-    this.initHeaderStyle("down", 0);
-    for (let i = 0; i < this.goalTable.goalTree.length; i++) {
-      this.initBodyStyle("down", i, 0);
-    }
   },
 };
 </script>
 
 <style scoped>
 .main-table {
-  width: 1920px;
+  width: 100%;
+  height: 100%;
+  position: relative;
 }
 .table-header {
-  width: 1920px;
+  width: 100%;
   height: 100px;
   overflow: hidden;
   position: relative;
   border: 1px solid #555;
+  border-left: none;
   border-bottom: none;
   box-sizing: border-box;
   color: #aaa;
@@ -978,12 +1011,17 @@ export default {
   padding: 0 10px;
   margin: 0;
 }
+.table-body-wrapper {
+  height: calc(100% - 100px);
+  overflow: auto;
+}
 .table-body-item {
-  width: 1920px;
+  width: 100%;
   height: 100px;
   overflow: hidden;
   position: relative;
   border: 1px solid #555;
+  border-left: none;
   box-sizing: border-box;
   color: #aaa;
   font-size: 16px;
@@ -1014,7 +1052,7 @@ export default {
   position: absolute;
   top: -50px;
   left: 0px;
-  width: 1920px;
+  width: 100%;
   height: 50px;
   display: flex;
   align-items: center;
@@ -1026,7 +1064,7 @@ export default {
   position: absolute;
   top: -50px;
   left: 0px;
-  width: 1920px;
+  width: 100%;
   height: 50px;
   display: flex;
   align-items: center;
@@ -1039,7 +1077,7 @@ export default {
   position: absolute;
   top: 0px;
   left: 0px;
-  width: 1920px;
+  width: 100%;
   height: 50px;
   display: flex;
   align-items: center;
@@ -1051,7 +1089,7 @@ export default {
   position: absolute;
   top: 0px;
   left: 0px;
-  width: 1920px;
+  width: 100%;
   height: 50px;
   display: flex;
   align-items: center;
@@ -1068,7 +1106,7 @@ export default {
   position: absolute;
   top: 50px;
   left: 0;
-  width: 1920px;
+  width: 100%;
   height: 50px;
   display: flex;
   align-items: center;
@@ -1080,7 +1118,7 @@ export default {
   position: absolute;
   top: 50px;
   left: 0;
-  width: 1920px;
+  width: 100%;
   height: 50px;
   display: flex;
   align-items: center;
@@ -1093,7 +1131,7 @@ export default {
   position: absolute;
   top: 100px;
   left: 0;
-  width: 1920px;
+  width: 100%;
   height: 50px;
   display: flex;
   align-items: center;
@@ -1105,7 +1143,7 @@ export default {
   position: absolute;
   top: 100px;
   left: 0;
-  width: 1920px;
+  width: 100%;
   height: 50px;
   display: flex;
   align-items: center;
@@ -1115,6 +1153,8 @@ export default {
   border: 1px solid #555;
 }
 .ani {
-  transition: all 2s;
+  transition: left 1s cubic-bezier(0, 0.73, 0.04, 0.98),
+    width 1s cubic-bezier(0, 0.73, 0.04, 0.98),
+    top 1s cubic-bezier(0, 0.73, 0.04, 0.98) 1s;
 }
 </style>
