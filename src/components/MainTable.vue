@@ -1,6 +1,6 @@
 <template>
   <div class="main-table" ref="table">
-    <div class="table-header">
+    <div class="table-header no-select">
       <div
         :class="['sup-prev-cell', { ani: needAni }]"
         ref="supPrevCell"
@@ -331,10 +331,8 @@ export default {
     fetchHeaderData(depth) {
       let tempList = [],
         tempSum = 0,
-        tempNum = 0,
         tempYear,
         tempMonth,
-        tempDate,
         tempArr;
       switch (depth) {
         case 8:
@@ -391,10 +389,10 @@ export default {
         case 3:
           tempList = [];
           tempSum = 0;
-          tempNum = 0;
+          //tempNum = 0;
           tempYear = this.birthYear + this.indexList[1] * 5 + this.indexList[2];
           tempMonth = this.indexList[3] * 3 + this.indexList[4];
-          tempDate = new Date(tempYear, 0, 1);
+          //tempDate = new Date(tempYear, 0, 1);
           tempArr = [
             31,
             (tempYear % 4 === 0 && tempYear % 100 !== 0) || tempYear % 400 === 0
@@ -411,30 +409,56 @@ export default {
             30,
             31,
           ];
-          for (let i = 0; i < tempMonth; i++) {
-            tempSum += tempArr[i];
+          for (let i = 2001; i < tempYear; i++) {
+            tempSum =
+              (tempSum +
+                ((i % 4 === 0 && i % 100 !== 0) || i % 400 === 0 ? 2 : 1)) %
+              7;
           }
-          for (let i = 0; i < tempArr[tempMonth]; i++) {
-            if (
-              tempSum % 7 === 7 - tempDate.getDay() ||
-              i === tempArr[tempMonth] - 1
-            ) {
-              tempList.push({
-                text: `第${parseInt(tempSum / 7) + 1}周 ${
-                  tempNum === i
-                    ? (i === 0 ? "~" : "") +
-                      (i + 1) +
-                      "号" +
-                      (i === tempArr[tempMonth] - 1 ? "~" : "")
-                    : tempNum + 1 + "号-" + (i + 1) + "号"
-                }`,
-                parentIndex: this.indexList[5],
-                span: i - tempNum + 1,
-                total: tempArr[tempMonth],
-              });
-              tempNum = i + 1;
+          for (let i = tempYear; i < 2001; i++) {
+            tempSum =
+              (tempSum +
+                ((i % 4 === 0 && i % 100 !== 0) || i % 400 === 0 ? 2 : 1)) %
+              7;
+          }
+          console.log(tempSum);
+          {
+            let tempNo = tempYear >= 2001 ? tempSum : 7 - tempSum,
+              tempBase = 0;
+            for (let i = 0; i < tempMonth; i++) {
+              tempNo = (tempArr[i] + tempNo) % 7;
+              tempBase += tempArr[i];
             }
-            tempSum++;
+            let tempF = Math.ceil((tempBase + tempNo) / 7) || 1,
+              tempI = 0;
+            for (let i = 0; i < tempArr[tempMonth]; i++) {
+              if (i == 7 - tempNo) {
+                tempI = i;
+                tempList.push({
+                  text: `第${tempF}周 ${1 + "号-" + (7 - tempNo) + "号"}`,
+                  parentIndex: this.indexList[5],
+                  span: 7 - tempNo,
+                  total: tempArr[tempMonth],
+                });
+                tempF++;
+              } else if (i >= 13 - tempNo && (i + tempNo) % 7 == 0) {
+                tempI = i;
+                tempList.push({
+                  text: `第${tempF}周 ${i - 6 + "号-" + i + "号"}`,
+                  parentIndex: this.indexList[5],
+                  span: 7,
+                  total: tempArr[tempMonth],
+                });
+                tempF++;
+              } else if (i == tempArr[tempMonth] - 1) {
+                tempList.push({
+                  text: `第${tempF}周 ${tempI + 1 + "号-" + (i + 1) + "号"}`,
+                  parentIndex: this.indexList[5],
+                  span: i - tempI + 1,
+                  total: tempArr[tempMonth],
+                });
+              }
+            }
           }
           console.log(tempList);
           return tempList;
@@ -1003,6 +1027,12 @@ export default {
   font-size: 16px;
   font-weight: 700;
   background-color: #333333;
+}
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
 }
 .table-header div p {
   overflow: hidden;
