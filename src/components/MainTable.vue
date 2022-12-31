@@ -1,6 +1,6 @@
 <template>
   <div class="main-table" ref="table">
-    <div class="table-header no-select">
+    <div class="table-header no-select" ref="tableHeader">
       <div
         :class="['sup-prev-cell', { ani: needAni }]"
         ref="supPrevCell"
@@ -48,7 +48,7 @@
         </p>
       </div>
     </div>
-    <div class="table-body-wrapper" @scroll="handleScroll()" ref="tableBody">
+    <div class="table-body-wrapper" @scroll="handleScroll" ref="tableBody">
       <div
         class="table-body-item"
         v-for="(aspect, j) in data.goalTree"
@@ -114,6 +114,9 @@
         </div>
       </div>
     </div>
+    <div class="scroll" ref="scroll" @scroll="handleScrollX">
+      <div class="content" ref="content"></div>
+    </div>
   </div>
 </template>
 
@@ -149,8 +152,44 @@ export default {
     birthYear: "",
     changeNum: ["零", "一", "二", "三", "四", "五", "六", "七", "八", "九"],
     canInput: true,
+    pauseScroll: false,
+    baseOffset: 0,
   }),
   methods: {
+    handleScrollX() {
+      if (this.pauseScroll) return;
+      let left =
+        (this.$refs.scroll.scrollLeft - this.baseOffset) /
+        parseFloat(
+          document.getElementsByTagName("html")[0].style.fontSize.split("px")[0]
+        );
+      this.$refs.supPrevCell?.map((item, i) => {
+        this.$refs.supPrevCell[i].style.marginLeft = -left + "rem";
+      });
+      this.$refs.supCell?.map((item, i) => {
+        this.$refs.supCell[i].style.marginLeft = -left + "rem";
+      });
+      this.$refs.subCell?.map((item, i) => {
+        this.$refs.subCell[i].style.marginLeft = -left + "rem";
+      });
+      this.$refs.subNextCell?.map((item, i) => {
+        this.$refs.subNextCell[i].style.marginLeft = -left + "rem";
+      });
+    },
+    cleanMarginLeft() {
+      this.$refs.supPrevCell?.map((item, i) => {
+        this.$refs.supPrevCell[i].style.marginLeft = "0rem";
+      });
+      this.$refs.supCell?.map((item, i) => {
+        this.$refs.supCell[i].style.marginLeft = "0rem";
+      });
+      this.$refs.subCell?.map((item, i) => {
+        this.$refs.subCell[i].style.marginLeft = "0rem";
+      });
+      this.$refs.subNextCell?.map((item, i) => {
+        this.$refs.subNextCell[i].style.marginLeft = "0rem";
+      });
+    },
     //点击Header底部事件处理
     subToAni(val) {
       if (this.needAni) return;
@@ -160,6 +199,18 @@ export default {
       this.subNextList = this.fetchHeaderData(this.currentDepth - 1);
       this.needAni = false;
       let width = this.tableWidth;
+      this.pauseScroll = true;
+      this.$refs.content.style.width = this.subList.length * 100 + "%";
+      this.baseOffset =
+        width *
+        val *
+        parseFloat(
+          document.getElementsByTagName("html")[0].style.fontSize.split("px")[0]
+        );
+      this.$refs.scroll.scrollLeft = this.baseOffset;
+      setTimeout(() => {
+        this.pauseScroll = false;
+      });
       let supWidth = width * this.subList.length;
       let subWidth = width / this.subList.length;
       let nextWidth =
@@ -240,6 +291,19 @@ export default {
       this.supPrevList = this.fetchHeaderData(this.currentDepth);
       this.needAni = false;
       let width = this.tableWidth;
+      this.pauseScroll = true;
+      this.$refs.content.style.width = this.supPrevList.length * 100 + "%";
+      this.baseOffset =
+        width *
+        this.indexList[8 - this.currentDepth] *
+        parseFloat(
+          document.getElementsByTagName("html")[0].style.fontSize.split("px")[0]
+        );
+      this.$refs.scroll.scrollLeft = this.baseOffset;
+      setTimeout(() => {
+        this.cleanMarginLeft();
+        this.pauseScroll = false;
+      });
       let supWidth = width / this.supList.length;
       let subWidth =
         (this.supList[val].span
@@ -1013,6 +1077,17 @@ export default {
   width: 100%;
   height: 100%;
   position: relative;
+}
+.scroll {
+  width: 100%;
+  height: 10px;
+  margin-top: -10px;
+  z-index: 100;
+  position: relative;
+  overflow-x: auto;
+}
+.content {
+  width: 100%;
 }
 .table-header {
   width: 100%;
