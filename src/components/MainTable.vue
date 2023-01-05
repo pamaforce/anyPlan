@@ -202,8 +202,11 @@ export default {
         document.getElementsByTagName("html")[0].style.fontSize.split("px")[0]
       );
       let left = (this.$refs.scroll.scrollLeft - this.baseOffset) / basePx;
-      this.$refs.supPrevCell?.map((item, i) => {
-        this.$refs.supPrevCell[i].style.marginLeft = -left + "rem";
+      this.supPrevList.map((item, i) => {
+        this.supPrevList[i].marginLeft = -left;
+      });
+      this.subNextList.map((item, i) => {
+        this.subNextList[i].marginLeft = -left;
       });
       this.supList.map((item, i) => {
         this.supList[i].marginLeft = -left;
@@ -218,25 +221,25 @@ export default {
         this.subList[i].hide = hide;
       });
       this.$forceUpdate();
-      // this.$refs.subCell?.map((item, i) => {
-      //   this.$refs.subCell[i].style.marginLeft = -left + "rem";
-      // });
-      this.$refs.subNextCell?.map((item, i) => {
-        this.$refs.subNextCell[i].style.marginLeft = -left + "rem";
-      });
     },
     cleanMarginLeft() {
-      this.$refs.supPrevCell?.map((item, i) => {
-        this.$refs.supPrevCell[i].style.marginLeft = "0rem";
+      this.supPrevList.map((item, i) => {
+        this.supPrevList[i].marginLeft = 0;
       });
-      this.$refs.supCell?.map((item, i) => {
-        this.$refs.supCell[i].style.marginLeft = "0rem";
+      this.subNextList.map((item, i) => {
+        this.subNextList[i].marginLeft = 0;
       });
-      this.$refs.subCell?.map((item, i) => {
-        this.$refs.subCell[i].style.marginLeft = "0rem";
+      this.supList.map((item, i) => {
+        this.supList[i].marginLeft = 0;
+        let temp = this.supList[i].left;
+        let hide = temp > 240 || temp < -120;
+        this.supList[i].hide = hide;
       });
-      this.$refs.subNextCell?.map((item, i) => {
-        this.$refs.subNextCell[i].style.marginLeft = "0rem";
+      this.subList.map((item, i) => {
+        this.subList[i].marginLeft = 0;
+        let temp = this.subList[i].left;
+        let hide = temp > 240 || temp < -120;
+        this.subList[i].hide = hide;
       });
     },
     //点击Header底部事件处理
@@ -292,46 +295,45 @@ export default {
               : nextWidth;
           this.subNextList[i].left = subLeftTotal + leftTotal;
         });
-        this.$forceUpdate();
       });
       setTimeout(() => {
         this.needAni = true;
-        this.$forceUpdate();
-        this.$nextTick(() => {
-          this.supList.map((item, i) => {
-            this.supList[i].top = -3.125;
-            this.supList[i].width = supWidth;
-            this.supList[i].left =
-              supWidth * (i - this.indexList[7 - this.currentDepth] || 0) -
-              width * val;
-          });
-          this.subList.map((item, i) => {
-            this.subList[i].top = 0;
-            this.subList[i].width = width;
-            this.subList[i].left = width * (i - val);
-          });
-          let leftTotal = 0;
-          this.subNextList.map((item, i) => {
-            this.subNextList[i].top = 3.125;
-            this.subNextList[i].width = this.subNextList[i].span
-              ? ((newNextWidth * this.subNextList.length) /
-                  this.subNextList[i].total) *
-                this.subNextList[i].span
-              : newNextWidth;
-            if (i > 0)
-              leftTotal += this.subNextList[i - 1].span
-                ? ((newNextWidth * this.subNextList.length) /
-                    this.subNextList[i - 1].total) *
-                  this.subNextList[i - 1].span
-                : newNextWidth;
-            this.subNextList[i].left = leftTotal - width * val;
-          });
-          this.$forceUpdate();
-          setTimeout(() => {
-            this.rebuildHeader("down", val);
-          }, 2000);
+        this.supList.map((item, i) => {
+          this.supList[i].top = -3.125;
+          this.supList[i].width = supWidth;
+          this.supList[i].marginLeft = 0;
+          this.supList[i].left =
+            supWidth * (i - this.indexList[7 - this.currentDepth] || 0) -
+            width * val;
         });
-      });
+        this.subList.map((item, i) => {
+          this.subList[i].top = 0;
+          this.subList[i].width = width;
+          this.subList[i].marginLeft = 0;
+          this.subList[i].left = width * (i - val);
+        });
+        let leftTotal = 0;
+        this.subNextList.map((item, i) => {
+          this.subNextList[i].top = 3.125;
+          this.subNextList[i].width = this.subNextList[i].span
+            ? ((newNextWidth * this.subNextList.length) /
+                this.subNextList[i].total) *
+              this.subNextList[i].span
+            : newNextWidth;
+          if (i > 0)
+            leftTotal += this.subNextList[i - 1].span
+              ? ((newNextWidth * this.subNextList.length) /
+                  this.subNextList[i - 1].total) *
+                this.subNextList[i - 1].span
+              : newNextWidth;
+          this.subNextList[i].marginLeft = 0;
+          this.subNextList[i].left = leftTotal - width * val;
+        });
+        this.$forceUpdate();
+        setTimeout(() => {
+          this.rebuildHeader("down", val);
+        }, 2000);
+      }, 50);
       //this.subBodyToAni(val);
     },
     //点击Header顶部事件处理
@@ -417,38 +419,47 @@ export default {
     rebuildHeader(type, val) {
       switch (type) {
         case "down":
-          // this.subList.forEach((item) => {
-          //   item.parentIndex = this.indexList[7 - this.currentDepth] || 0;
-          // });
-          this.supList = this.subList;
-          // this.subNextList.forEach((item) => {
-          //   item.parentIndex = val;
-          // });
-          this.subList = this.subNextList;
+          this.needAni = false;
+          this.$nextTick(() => {
+            this.supList = this.subList;
+            this.subList = this.subNextList;
+            this.supList.map((item, i) => {
+              let temp = this.supList[i].left;
+              let hide = temp > 240 || temp < -120;
+              this.supList[i].hide = hide;
+            });
+            this.subList.map((item, i) => {
+              let temp = this.subList[i].left;
+              let hide = temp > 240 || temp < -120;
+              this.subList[i].hide = hide;
+            });
+            this.$forceUpdate();
+          });
           break;
         case "up":
           // this.supList.forEach((item) => {
           //   item.parentIndex = this.indexList[8 - this.currentDepth];
           // });
-          this.subList = this.supList;
+          this.subList = [...this.supList];
           // this.supPrevList.forEach((item) => {
           //   item.parentIndex = this.indexList[7 - this.currentDepth] || 0;
           // });
-          this.supList = this.supPrevList;
+          this.supList = [...this.supPrevList];
           break;
-
         default:
           break;
       }
-      this.initHeaderStyle(type, val);
+      console.log(val);
+      //this.initHeaderStyle(type, val);
     },
     //获取Header数据
     fetchHeaderData(depth) {
       let tempList = [],
         tempSum = 0,
         tempYear,
-        tempMonth,
-        tempArr;
+        tempArr,
+        curYear,
+        isFar;
       switch (depth) {
         case 8:
           return [
@@ -467,12 +478,13 @@ export default {
             tempList.push({
               text: `${i + 1}期 ${this.birthYear + 5 * i}-${
                 this.birthYear + 5 * i + 4
-              } ${5 * i}岁-${5 * i + 4}岁`,
+              } ${5 * i + 1}岁-${5 * i + 5}岁`,
               parentIndex: 0,
               top: 0,
               left: 0,
               width: 0,
               marginLeft: 0,
+              hide: false,
             });
           }
           return tempList;
@@ -480,128 +492,181 @@ export default {
           tempList = [];
           for (let j = 0; j < 20; j++) {
             for (let i = 0; i < 5; i++) {
+              curYear = this.indexList[1] * 5 - 5 * j - i;
+              isFar = curYear < -5 || curYear > 10;
               tempList.push({
-                text: `${this.birthYear + 5 * j + i}年 ${5 * j + i}岁`,
+                text: `${this.birthYear + 5 * j + i}年 ${5 * j + i + 1}岁`,
                 parentIndex: j,
                 top: 0,
                 left: 0,
                 width: 0,
                 marginLeft: 0,
+                hide: isFar,
               });
             }
           }
-          console.log(tempList);
           return tempList;
         case 5:
           tempList = [];
-          for (let i = 0; i < 4; i++) {
-            tempList.push({
-              text: `第${this.changeNum[i + 1]}季度 ${i * 3 + 1}月-${
-                i * 3 + 3
-              }月`,
-              parentIndex: this.indexList[3],
-            });
-          }
-          return tempList;
-        case 4:
-          tempList = [];
-          for (let i = 0; i < 3; i++) {
-            tempList.push({
-              text: `${
-                this.birthYear + this.indexList[1] * 5 + this.indexList[2]
-              }年 ${3 * this.indexList[3] + i + 1}月`,
-              parentIndex: this.indexList[4],
-            });
-          }
-          return tempList;
-        case 3:
-          tempList = [];
-          tempSum = 0;
-          //tempNum = 0;
-          tempYear = this.birthYear + this.indexList[1] * 5 + this.indexList[2];
-          tempMonth = this.indexList[3] * 3 + this.indexList[4];
-          //tempDate = new Date(tempYear, 0, 1);
-          tempArr = [
-            31,
-            (tempYear % 4 === 0 && tempYear % 100 !== 0) || tempYear % 400 === 0
-              ? 29
-              : 28,
-            31,
-            30,
-            31,
-            30,
-            31,
-            31,
-            30,
-            31,
-            30,
-            31,
-          ];
-          for (let i = 2001; i < tempYear; i++) {
-            tempSum =
-              (tempSum +
-                ((i % 4 === 0 && i % 100 !== 0) || i % 400 === 0 ? 2 : 1)) %
-              7;
-          }
-          for (let i = tempYear; i < 2001; i++) {
-            tempSum =
-              (tempSum +
-                ((i % 4 === 0 && i % 100 !== 0) || i % 400 === 0 ? 2 : 1)) %
-              7;
-          }
-          console.log(tempSum);
-          {
-            let tempNo = tempYear >= 2001 ? tempSum : 7 - tempSum,
-              tempBase = 0;
-            for (let i = 0; i < tempMonth; i++) {
-              tempNo = (tempArr[i] + tempNo) % 7;
-              tempBase += tempArr[i];
-            }
-            let tempF = Math.ceil((tempBase + tempNo) / 7) || 1,
-              tempI = 0;
-            for (let i = 0; i < tempArr[tempMonth]; i++) {
-              if (i == 7 - tempNo) {
-                tempI = i;
+          for (let k = 0; k < 20; k++) {
+            for (let j = 0; j < 5; j++) {
+              curYear = this.indexList[2] - 5 * k - j;
+              isFar = curYear < -3 || curYear > 4;
+              for (let i = 0; i < 4; i++) {
                 tempList.push({
-                  text: `第${tempF}周 ${1 + "号-" + (7 - tempNo) + "号"}`,
-                  parentIndex: this.indexList[5],
-                  span: 7 - tempNo,
-                  total: tempArr[tempMonth],
-                });
-                tempF++;
-              } else if (i >= 13 - tempNo && (i + tempNo) % 7 == 0) {
-                tempI = i;
-                tempList.push({
-                  text: `第${tempF}周 ${i - 6 + "号-" + i + "号"}`,
-                  parentIndex: this.indexList[5],
-                  span: 7,
-                  total: tempArr[tempMonth],
-                });
-                tempF++;
-              } else if (i == tempArr[tempMonth] - 1) {
-                tempList.push({
-                  text: `第${tempF}周 ${tempI + 1 + "号-" + (i + 1) + "号"}`,
-                  parentIndex: this.indexList[5],
-                  span: i - tempI + 1,
-                  total: tempArr[tempMonth],
+                  text: `第${this.changeNum[i + 1]}季度 ${i * 3 + 1}月-${
+                    i * 3 + 3
+                  }月`,
+                  parentIndex: j,
+                  top: 0,
+                  left: 0,
+                  width: 0,
+                  marginLeft: 0,
+                  hide: isFar,
                 });
               }
             }
           }
-          console.log(tempList);
+          return tempList;
+        case 4:
+          tempList = [];
+          for (let p = 0; p < 20; p++) {
+            for (let k = 0; k < 5; k++) {
+              curYear = this.indexList[3] / 4 - 5 * p - k;
+              isFar = curYear < -1 || curYear > 1;
+              for (let j = 0; j < 4; j++) {
+                for (let i = 0; i < 3; i++) {
+                  tempList.push({
+                    text: `${this.birthYear + p * 5 + k}年 ${3 * j + i + 1}月`,
+                    parentIndex: j,
+                    top: 0,
+                    left: 0,
+                    width: 0,
+                    marginLeft: 0,
+                    hide: isFar,
+                  });
+                }
+              }
+            }
+          }
+          return tempList;
+        case 3:
+          tempList = [];
+          curYear = this.birthYear + this.indexList[4] / 12;
+          tempArr = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+          tempSum = 0;
+          for (let i = 2001; i < this.birthYear; i++) {
+            tempSum =
+              (tempSum +
+                ((i % 4 === 0 && i % 100 !== 0) || i % 400 === 0 ? 2 : 1)) %
+              7;
+          }
+          for (let i = this.birthYear; i < 2001; i++) {
+            tempSum =
+              (tempSum +
+                ((i % 4 === 0 && i % 100 !== 0) || i % 400 === 0 ? 2 : 1)) %
+              7;
+          }
+          for (let m = 0; m < 20; m++) {
+            for (let p = 0; p < 5; p++) {
+              tempYear = this.birthYear + m * 5 + p;
+              let isRun =
+                (tempYear % 4 === 0 && tempYear % 100 !== 0) ||
+                tempYear % 400 === 0;
+              tempArr[1] = isRun ? 29 : 28;
+              isFar = tempYear - curYear;
+              isFar = isFar > 5 || isFar < -5;
+              let tempNo = tempYear >= 2001 ? tempSum : 7 - tempSum,
+                tempBase = 7 - tempNo,
+                tD = 8 - tempNo,
+                nD,
+                tempF = 1,
+                totalDay = isRun ? 366 : 365,
+                tM = 0;
+              tempList.push({
+                text: `第${tempF++}周 ${1 + "号-" + (7 - tempNo) + "号"}`,
+                parentIndex: 0,
+                // span: 7 - tempNo,
+                // total: tempArr[tempMonth],
+                top: 0,
+                left: 0,
+                width: 0,
+                marginLeft: 0,
+                hide: isFar,
+              });
+              while (tempBase + 7 <= totalDay) {
+                nD = tD + 6;
+                if (nD > tempArr[tM]) {
+                  nD -= tempArr[tM];
+                  tM++;
+                }
+                tempBase += 7;
+                tempList.push({
+                  text: `第${tempF++}周 ${tD + "号-" + nD + "号"}`,
+                  parentIndex: 0,
+                  // span: 7,
+                  // total: tempArr[tempMonth],
+                  top: 0,
+                  left: 0,
+                  width: 0,
+                  marginLeft: 0,
+                  hide: isFar,
+                });
+                tD = nD + 1;
+                if (tD > tempArr[tM]) {
+                  tD -= tempArr[tM];
+                  tM++;
+                }
+              }
+              if (tempBase <= totalDay) {
+                tempList.push({
+                  text: `第${tempF++}周 ${tD + "号-" + 31 + "号"}`,
+                  parentIndex: 0,
+                  // span: 7,
+                  // total: tempArr[tempMonth],
+                  top: 0,
+                  left: 0,
+                  width: 0,
+                  marginLeft: 0,
+                  hide: isFar,
+                });
+              }
+              tempSum =
+                (tempSum -
+                  ((tempYear % 4 === 0 && tempYear % 100 !== 0) ||
+                  tempYear % 400 === 0
+                    ? 2
+                    : 1) +
+                  7) %
+                7;
+            }
+          }
           return tempList;
         case 2:
           tempList = [];
-          tempSum = 0;
-          tempArr = this.fetchHeaderData(3);
-          for (let i = 0; i < this.indexList[5]; i++) {
-            tempSum += tempArr[i].span;
-          }
-          for (let i = 0; i < tempArr[this.indexList[5]].span; i++) {
-            tempList.push({
-              text: `${tempSum + i + 1}号`,
-              parentIndex: this.indexList[6],
-            });
+          console.log(
+            (this.indexList[5] * 7) / 365,
+            (this.indexList[5] * 7) / 365 + this.birthYear
+          );
+          for (let j = 0; j < 100; j++) {
+            tempYear = this.birthYear + j;
+            curYear = (this.indexList[5] * 7) / 365 - j;
+            isFar = curYear < -1 || curYear > 1;
+            let isRun =
+                (tempYear % 4 === 0 && tempYear % 100 !== 0) ||
+                tempYear % 400 === 0,
+              totalDay = isRun ? 366 : 365;
+            for (let i = 0; i < totalDay; i++) {
+              tempList.push({
+                text: `${i} 号`,
+                parentIndex: 0,
+                top: 0,
+                left: 0,
+                width: 0,
+                marginLeft: 0,
+                hide: isFar,
+              });
+            }
           }
           return tempList;
         default:
@@ -617,13 +682,12 @@ export default {
         let subWidth = (width / this.subList.length) * this.supList.length;
         let nextWidth = subWidth / this.subNextList.length;
         let prevWidth = width * this.supList.length;
-        this.$refs.supPrevCell?.map((item, i) => {
-          this.$refs.supPrevCell[i].style.top = "-3.125rem";
-          this.$refs.supPrevCell[i].style.width = prevWidth + "rem";
-          this.$refs.supPrevCell[i].style.left =
+        this.supPrevList.map((item, i) => {
+          this.supPrevList[i].top = -3.125;
+          this.supPrevList[i].width = prevWidth;
+          this.supPrevList[i].left =
             prevWidth * (i - this.indexList[8 - this.currentDepth]) -
-            width * val +
-            "rem";
+            width * val;
         });
         this.supList.map((item, i) => {
           this.supList[i].top = 0;
@@ -646,12 +710,14 @@ export default {
               : subWidth;
           this.subList[i].left = leftTotal - width * val;
         });
-        this.$forceUpdate();
-        this.$refs.subNextCell?.map((item, i) => {
-          this.$refs.subNextCell[i].style.top = "6.4rem";
-          this.$refs.subNextCell[i].style.width = nextWidth + "rem";
-          this.$refs.subNextCell[i].style.left = nextWidth * i + "rem";
+        this.subNextList.map((item, i) => {
+          this.subNextList[i].top = 6.4;
+          this.subNextList[i].width = nextWidth;
+          this.subNextList[i].left = nextWidth * i;
         });
+        console.log(this.supList);
+        console.log(this.subList);
+        this.$forceUpdate();
         if (type === "up") {
           this.indexList.pop();
         }
@@ -1320,7 +1386,8 @@ export default {
   border: 1px solid #555;
 }
 .ani {
-  transition: left 1s cubic-bezier(0, 0.73, 0.04, 0.98),
+  transition: margin-left 1s cubic-bezier(0, 0.73, 0.04, 0.98),
+    left 1s cubic-bezier(0, 0.73, 0.04, 0.98),
     width 1s cubic-bezier(0, 0.73, 0.04, 0.98),
     top 1s cubic-bezier(0, 0.73, 0.04, 0.98) 1s;
 }
