@@ -13,12 +13,13 @@
         <MainTable
           ref="mainTable"
           :data="goalTable"
+          :hasAni="ani"
           @save="saveData"
           @input="handleRightInput"
           @scroll="handleRightScroll"
       /></pane>
     </splitpanes>
-    <BottomBar @clear="clearData" />
+    <BottomBar @clear="clearData" @switchAni="switchAni" :ani="ani" />
   </div>
 </template>
 
@@ -32,10 +33,12 @@ export default {
   components: { Splitpanes, Pane, MainTable, BottomBar, AspectTable },
   data() {
     return {
+      storageKey: "anyPlanUserData_1",
       goalTable: {
         aspect: [],
         goalTree: [],
       },
+      ani: true,
     };
   },
   methods: {
@@ -44,7 +47,7 @@ export default {
     },
     getData() {
       this.goalTable = JSON.parse(
-        window.localStorage.getItem("anyPlanUserData_0") ||
+        window.localStorage.getItem(this.storageKey) ||
           JSON.stringify({
             aspect: [],
             goalTree: [],
@@ -53,7 +56,7 @@ export default {
     },
     saveData(val) {
       window.localStorage.setItem(
-        "anyPlanUserData_0",
+        this.storageKey,
         JSON.stringify(this.goalTable)
       );
       this.$refs.aspectTable.$forceUpdate();
@@ -66,6 +69,10 @@ export default {
         goalTree: [],
       };
       this.saveData();
+    },
+    switchAni() {
+      this.ani = !this.ani;
+      console.log(this.ani);
     },
     onContextmenu(event) {
       this.$contextmenu({

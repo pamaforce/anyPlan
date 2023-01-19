@@ -2,12 +2,17 @@
   <div class="bottomBar">
     <span>你好 lidasheng</span>
     <span class="cursor" @click="$emit('clear')">清除数据</span>
+    <span class="cursor" @click="$emit('switchAni')"
+      >{{ ani ? "关闭" : "打开" }}动画</span
+    >
     <span class="cursor">登出</span>
   </div>
 </template>
 
 <script>
-export default {};
+export default {
+  props: ["ani"],
+};
 </script>
 
 <style scoped>
