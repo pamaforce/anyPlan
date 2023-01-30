@@ -8,11 +8,44 @@
     "
   >
     <div class="aspect-header">
-      <div class="sup-cell"><p>管理计划</p></div>
+      <div class="sup-cell"><p>一生目标</p></div>
       <div class="sub-cells">
-        <div><p>业</p></div>
-        <div><p>方面</p></div>
-        <div><p>项目</p></div>
+        <div :class="'sub-cell-item sub-cell-item-1-' + state">
+          <div
+            :class="'item-label-l' + (hasInit ? ' item-label-l-' + state : '')"
+          >
+            <p>业</p>
+          </div>
+          <div
+            :class="'item-label-r' + (hasInit ? ' item-label-r-' + state : '')"
+          >
+            <p>一生</p>
+          </div>
+        </div>
+        <div :class="'sub-cell-item sub-cell-item-2-' + state">
+          <div
+            :class="'item-label-l' + (hasInit ? ' item-label-l-' + state : '')"
+          >
+            <p>方面</p>
+          </div>
+          <div
+            :class="'item-label-r' + (hasInit ? ' item-label-r-' + state : '')"
+          >
+            <p>一生</p>
+          </div>
+        </div>
+        <div :class="'sub-cell-item sub-cell-item-3-' + state">
+          <div
+            :class="'item-label-l' + (hasInit ? ' item-label-l-' + state : '')"
+          >
+            <p>项目</p>
+          </div>
+          <div
+            :class="'item-label-r' + (hasInit ? ' item-label-r-' + state : '')"
+          >
+            <p>一生</p>
+          </div>
+        </div>
       </div>
     </div>
     <div class="aspect-body-wrapper" @scroll="handleScroll()" ref="aspectBody">
@@ -27,21 +60,39 @@
         "
       >
         <div
-          class="aspect-level-0"
+          :class="'aspect-level-0 aspect-level-0-' + state"
           :title="aspect.text"
-          @click="clickItem(0, j, 0)"
         >
-          <p v-if="!aspect.showInput">
-            {{ aspect.text }}
-          </p>
-          <input
-            v-else
-            v-model="aspect.text"
-            @blur="blurItem(0, j, 0)"
-            @keyup.enter="blurItem(0, j, 0)"
-          />
+          <div
+            :class="'item-label-l' + (hasInit ? ' item-label-l-' + state : '')"
+            @click="clickItem(0, j, 0)"
+          >
+            <p v-if="!aspect.showInput">
+              {{ aspect.text }}
+            </p>
+            <input
+              v-else
+              v-model="aspect.text"
+              @blur="blurItem(0, j, 0)"
+              @keyup.enter="blurItem(0, j, 0)"
+            />
+          </div>
+          <div
+            :class="'item-label-r' + (hasInit ? ' item-label-r-' + state : '')"
+            @click="clickItem(0, j, 0, 0, true)"
+          >
+            <p v-if="!aspect.goal.showInput">
+              {{ aspect.goal.text }}
+            </p>
+            <input
+              v-else
+              v-model="aspect.goal.text"
+              @blur="blurItem(0, j, 0)"
+              @keyup.enter="blurItem(0, j, 0)"
+            />
+          </div>
         </div>
-        <div class="wrapper_1">
+        <div :class="'wrapper_1' + (hasInit ? ' wrapper_1-' + state : '')">
           <div
             class="wrapper_2"
             v-for="(item, i) in aspect.children"
@@ -52,24 +103,43 @@
               }
             "
           >
-            <div class="wrapper_3">
-              <div
-                :title="item.text"
-                class="aspect-level-1"
-                @click="clickItem(1, j, i)"
-              >
-                <p v-if="!item.showInput">
-                  {{ item.text }}
-                </p>
-                <input
-                  v-else
-                  v-model="item.text"
-                  @blur="blurItem(1, j, i)"
-                  @keyup.enter="blurItem(1, j, i)"
-                />
+            <div :class="'wrapper_3' + (hasInit ? ' wrapper_3-' + state : '')">
+              <div :title="item.text" class="aspect-level-1">
+                <div
+                  :class="
+                    'item-label-l' + (hasInit ? ' item-label-l-' + state : '')
+                  "
+                  @click="clickItem(1, j, i)"
+                >
+                  <p v-if="!item.showInput">
+                    {{ item.text }}
+                  </p>
+                  <input
+                    v-else
+                    v-model="item.text"
+                    @blur="blurItem(1, j, i)"
+                    @keyup.enter="blurItem(1, j, i)"
+                  />
+                </div>
+                <div
+                  :class="
+                    'item-label-r' + (hasInit ? ' item-label-r-' + state : '')
+                  "
+                  @click="clickItem(1, j, i, 0, true)"
+                >
+                  <p v-if="!item.goal.showInput">
+                    {{ item.goal.text }}
+                  </p>
+                  <input
+                    v-else
+                    v-model="item.goal.text"
+                    @blur="blurItem(1, j, i)"
+                    @keyup.enter="blurItem(1, j, i)"
+                  />
+                </div>
               </div>
             </div>
-            <div class="wrapper_4">
+            <div :class="'wrapper_4' + (hasInit ? ' wrapper_4-' + state : '')">
               <div
                 class="wrapper_5"
                 v-for="(_item, k) in item.children"
@@ -80,20 +150,39 @@
                   }
                 "
               >
-                <div
-                  :title="_item.text"
-                  class="aspect-level-1"
-                  @click="clickItem(2, j, i, k)"
-                >
-                  <p v-if="!_item.showInput">
-                    {{ _item.text }}
-                  </p>
-                  <input
-                    v-else
-                    v-model="_item.text"
-                    @blur="blurItem(2, j, i, k)"
-                    @keyup.enter="blurItem(2, j, i, k)"
-                  />
+                <div :title="_item.text" class="aspect-level-1">
+                  <div
+                    :class="
+                      'item-label-l' + (hasInit ? ' item-label-l-' + state : '')
+                    "
+                    @click="clickItem(2, j, i, k)"
+                  >
+                    <p v-if="!_item.showInput">
+                      {{ _item.text }}
+                    </p>
+                    <input
+                      v-else
+                      v-model="_item.text"
+                      @blur="blurItem(2, j, i, k)"
+                      @keyup.enter="blurItem(2, j, i, k)"
+                    />
+                  </div>
+                  <div
+                    :class="
+                      'item-label-r' + (hasInit ? ' item-label-r-' + state : '')
+                    "
+                    @click="clickItem(2, j, i, k, true)"
+                  >
+                    <p v-if="!_item.goal.showInput">
+                      {{ _item.goal.text }}
+                    </p>
+                    <input
+                      v-else
+                      v-model="_item.goal.text"
+                      @blur="blurItem(2, j, i, k, true)"
+                      @keyup.enter="blurItem(2, j, i, k, true)"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -129,9 +218,14 @@ export default {
         goalTree: [],
       }),
     },
+    state: {
+      type: Number,
+      default: () => 0,
+    },
   },
   data: () => {
     return {
+      hasInit: false,
       confirmDialog: false,
       tempData: [],
       tempMsg: "",
@@ -146,7 +240,26 @@ export default {
           temp = `成功添加一个节点 "业"`;
           this.data.aspect.push({
             text: "业",
-            children: [],
+            goal: {
+              text: "业的一生目标",
+            },
+            children: [
+              {
+                text: "方面",
+                goal: {
+                  text: "方面的一生目标",
+                },
+                children: [
+                  {
+                    text: "项目",
+                    goal: {
+                      text: "项目的一生目标",
+                    },
+                    children: [],
+                  },
+                ],
+              },
+            ],
           });
           this.data.goalTree.push({});
           break;
@@ -154,7 +267,26 @@ export default {
           temp = `成功插入一个节点 "业"`;
           this.data.aspect.splice(info[0], 0, {
             text: "业",
-            children: [],
+            goal: {
+              text: "业的一生目标",
+            },
+            children: [
+              {
+                text: "方面",
+                goal: {
+                  text: "方面的一生目标",
+                },
+                children: [
+                  {
+                    text: "项目",
+                    goal: {
+                      text: "项目的一生目标",
+                    },
+                    children: [],
+                  },
+                ],
+              },
+            ],
           });
           {
             let index = 0;
@@ -174,7 +306,18 @@ export default {
           temp = `成功添加一个节点 "方面"`;
           this.data.aspect[info[0]].children.push({
             text: "方面",
-            children: [],
+            goal: {
+              text: "方面的一生目标",
+            },
+            children: [
+              {
+                text: "项目",
+                goal: {
+                  text: "项目的一生目标",
+                },
+                children: [],
+              },
+            ],
           });
           if (this.data.aspect[info[0]].children.length !== 1) {
             let index = 1;
@@ -190,7 +333,18 @@ export default {
           temp = `成功插入一个节点 "方面"`;
           this.data.aspect[info[0]].children.splice(info[1], 0, {
             text: "方面",
-            children: [],
+            goal: {
+              text: "方面的一生目标",
+            },
+            children: [
+              {
+                text: "项目",
+                goal: {
+                  text: "项目的一生目标",
+                },
+                children: [],
+              },
+            ],
           });
           {
             let index = 0;
@@ -214,6 +368,9 @@ export default {
           temp = `成功添加一个节点 "项目"`;
           this.data.aspect[info[0]].children[info[1]].children.push({
             text: "项目",
+            goal: {
+              text: "项目的一生目标",
+            },
             children: [],
           });
           if (
@@ -225,7 +382,6 @@ export default {
               index +=
                 this.data.aspect[info[0]].children[i].children.length || 1;
             }
-            console.log(index);
             for (let i = 0; i < info[0]; i++) {
               if (this.data.aspect[i].children.length) {
                 for (let j = 0; j < this.data.aspect[i].children.length; j++) {
@@ -235,7 +391,6 @@ export default {
                 index += 1;
               }
             }
-            console.log(index);
             this.data.goalTree.splice(index, 0, {});
           }
           break;
@@ -246,6 +401,9 @@ export default {
             0,
             {
               text: "项目",
+              goal: {
+                text: "项目的一生目标",
+              },
               children: [],
             }
           );
@@ -264,7 +422,6 @@ export default {
                 index += 1;
               }
             }
-            console.log(index);
             this.data.goalTree.splice(index, 0, {});
           }
           break;
@@ -336,7 +493,8 @@ export default {
               info[2],
               1
             );
-            this.data.goalTree.splice(index, 1);
+            console.log(index);
+            // this.data.goalTree.splice(index, 1);
           }
           break;
 
@@ -352,19 +510,29 @@ export default {
       });
       this.$emit("save", true);
     },
-    clickItem(type, row, val, subVal = 0) {
-      if (!this.canInput) return;
-      this.canInput = false;
-      this.$emit("input", false);
+    clickItem(type, row, val, subVal = 0, isDown = false) {
+      // if (!this.canInput) return;
+      // this.canInput = false;
+      // this.$emit("input", false);
+      console.log(isDown);
       switch (type) {
         case 0:
-          this.data.aspect[row].showInput = true;
+          if (isDown) this.data.aspect[row].goal.showInput = true;
+          else this.data.aspect[row].showInput = true;
           break;
         case 1:
-          this.data.aspect[row].children[val].showInput = true;
+          if (isDown) this.data.aspect[row].children[val].goal.showInput = true;
+          else this.data.aspect[row].children[val].showInput = true;
           break;
         case 2:
-          this.data.aspect[row].children[val].children[subVal].showInput = true;
+          if (isDown)
+            this.data.aspect[row].children[val].children[
+              subVal
+            ].goal.showInput = true;
+          else
+            this.data.aspect[row].children[val].children[
+              subVal
+            ].showInput = true;
           break;
         default:
           break;
@@ -376,27 +544,57 @@ export default {
       });
     },
     //输入框失焦
-    blurItem(type, row, val, subVal = 0) {
+    blurItem(type, row, val, subVal = 0, isNode = false) {
       switch (type) {
         case 0:
           this.data.aspect[row].showInput = false;
+          this.data.aspect[row].goal.showInput = false;
           break;
         case 1:
           this.data.aspect[row].children[val].showInput = false;
+          this.data.aspect[row].children[val].goal.showInput = false;
           break;
         case 2:
           this.data.aspect[row].children[val].children[
             subVal
           ].showInput = false;
+          this.data.aspect[row].children[val].children[
+            subVal
+          ].goal.showInput = false;
           break;
         default:
           break;
       }
+      //如果是叶节点就更新对应右侧的一生目标
+      if (isNode) {
+        let index = 0;
+        for (let i = 0; i < row; i++) {
+          if (this.data.aspect[i].children.length === 0) index += 1;
+          for (let j = 0; j < this.data.aspect[i].children.length; j++) {
+            index += this.data.aspect[i].children[j].children.length || 1;
+          }
+        }
+        for (let i = 0; i < val; i++) {
+          index += this.data.aspect[row].children[i].children.length || 1;
+        }
+        index += subVal;
+        if (this.data.goalTree[index][0]) {
+          this.data.goalTree[index][0][0].desc =
+            this.data.aspect[row].children[val].children[subVal].goal.text;
+        } else {
+          this.data.goalTree[index][0] = {
+            0: {
+              desc: this.data.aspect[row].children[val].children[subVal].goal
+                .text,
+            },
+          };
+        }
+      }
       this.$emit("save", true);
-      setTimeout(() => {
-        this.canInput = true;
-        this.$emit("input", true);
-      }, 100);
+      // setTimeout(() => {
+      //   this.canInput = true;
+      //   this.$emit("input", true);
+      // }, 100);
     },
     onContextmenu(event, ...info) {
       let item = [];
@@ -602,7 +800,11 @@ export default {
       this.$refs.aspectBody.scrollTop = val;
     },
   },
-  created() {},
+  created() {
+    setTimeout(() => {
+      this.hasInit = true;
+    }, 10);
+  },
 };
 </script>
 
@@ -614,7 +816,7 @@ export default {
 }
 .aspect-header {
   width: 100%;
-  height: 99px;
+  height: 100px;
   overflow: hidden;
   position: relative;
   border: 1px solid #555;
@@ -653,21 +855,39 @@ export default {
   top: 50px;
   left: 0px;
   width: 100%;
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  display: flex;
   height: 50px;
 }
-.sub-cells div {
+.sub-cell-item {
   display: flex;
   align-items: center;
   justify-content: center;
   background-color: #333333;
   border: 1px solid #555;
   min-width: 0;
+  width: 100%;
+  transition: all 1.5s ease-in;
+}
+.item-label-l {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 1.5s ease-in;
+}
+.item-label-r {
+  width: 0%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-left: 1px solid #555;
+  transition: all 1.5s ease-in;
 }
 .aspect-body-item {
   width: 100%;
-  min-height: 99px;
+  min-height: 100px;
   overflow: hidden;
   position: relative;
   border: 1px solid #555;
@@ -676,8 +896,7 @@ export default {
   font-size: 16px;
   background-color: #cccccc;
   border-top: none;
-  display: grid;
-  grid-template-columns: 1fr 2fr;
+  display: flex;
 }
 .aspect-body-item div p {
   overflow: hidden;
@@ -700,7 +919,7 @@ export default {
   font-size: 16px;
 }
 .aspect-level-0 {
-  min-height: 99px;
+  min-height: 100px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -708,17 +927,19 @@ export default {
   color: #2c3e50;
   border-right: 1px solid #555;
   min-width: 0;
+  width: 100%;
+  transition: all 1.5s ease-in;
 }
 .wrapper_1 {
-  width: 100%;
+  width: 200%;
   display: flex;
   flex-direction: column;
   min-width: 0;
+  transition: all 1.5s ease-in;
 }
 .wrapper_2 {
   width: 100%;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
   border-bottom: 1px solid #555;
 }
 .wrapper_3 {
@@ -726,12 +947,14 @@ export default {
   box-sizing: border-box;
   border-right: 1px solid #555;
   min-width: 0;
+  transition: all 1.5s ease-in;
 }
 .wrapper_4 {
   width: 100%;
   display: flex;
   flex-direction: column;
   min-width: 0;
+  transition: all 1.5s ease-in;
 }
 .wrapper_5 {
   width: 100%;
@@ -751,5 +974,164 @@ export default {
 }
 .wrapper_5:last-of-type {
   border-bottom: none;
+}
+
+.item-label-l-0 {
+  width: 30%;
+}
+.item-label-l-1 {
+  width: 10%;
+}
+.item-label-l-2 {
+  width: 15%;
+}
+.sub-cell-item-1-2 .item-label-l-2,
+.aspect-level-0-2 .item-label-l-2 {
+  width: 30%;
+}
+.aspect-level-1-2 .item-label-l-2 {
+  width: 30%;
+}
+.item-label-l-3 {
+  width: 100%;
+}
+.sub-cell-item-2-3 .item-label-l-3 {
+  width: 100%;
+}
+.sub-cell-item-3-3 .item-label-l-3 {
+  width: 100%;
+}
+.aspect-level-1 .item-label-l-3 {
+  width: 100%;
+}
+.sub-cell-item-3-4 .item-label-l-4 {
+  width: 100%;
+}
+.item-label-r-0 {
+  width: 70%;
+}
+.item-label-r-1 {
+  width: 90%;
+}
+.item-label-r-2 {
+  width: 85%;
+}
+.sub-cell-item-1-2 .item-label-r-2,
+.aspect-level-0-2 .item-label-r-2 {
+  width: 70%;
+}
+.item-label-r-3 {
+  width: 0%;
+}
+.sub-cell-item-2-3 .item-label-r-3 {
+  width: 200%;
+}
+.sub-cell-item-3-3 .item-label-r-3 {
+  width: 500%;
+}
+.aspect-level-1 .item-label-r-3 {
+  width: 200%;
+}
+.wrapper_5 .aspect-level-1 .item-label-r-3 {
+  width: 500%;
+}
+.sub-cell-item-3-4 .item-label-r-4 {
+  width: 700%;
+}
+.wrapper_5 .aspect-level-1 .item-label-r-4 {
+  width: 700%;
+}
+.sub-cell-item-1-0 {
+  width: 100%;
+}
+.sub-cell-item-1-1 {
+  width: 100%;
+}
+.sub-cell-item-1-2 {
+  width: 100%;
+}
+.sub-cell-item-1-3 {
+  width: 100%;
+}
+.sub-cell-item-1-4 {
+  width: 100%;
+}
+.sub-cell-item-2-0 {
+  width: 100%;
+}
+.sub-cell-item-2-1 {
+  width: 0%;
+}
+.sub-cell-item-2-2 {
+  width: 200%;
+}
+.sub-cell-item-2-3 {
+  width: 300%;
+}
+.sub-cell-item-2-4 {
+  width: 100%;
+}
+.sub-cell-item-3-0 {
+  width: 100%;
+}
+.sub-cell-item-3-1 {
+  width: 0%;
+}
+.sub-cell-item-3-2 {
+  width: 0%;
+}
+.sub-cell-item-3-3 {
+  width: 600%;
+}
+.sub-cell-item-3-4 {
+  width: 800%;
+}
+.aspect-level-0-0 {
+  width: 100%;
+}
+.aspect-level-0-1 {
+  width: 100%;
+}
+.aspect-level-0-2 {
+  width: 100%;
+}
+.aspect-level-0-3 {
+  width: 100%;
+}
+.aspect-level-0-4 {
+  width: 100%;
+}
+.wrapper_1-0 {
+  width: 200%;
+}
+.wrapper_1-1 {
+  width: 0%;
+}
+.wrapper_1-2 {
+  width: 200%;
+}
+.wrapper_1-3 {
+  width: 900%;
+}
+.wrapper_1-4 {
+  width: 900%;
+}
+.wrapper_3-2 {
+  width: 200%;
+}
+.wrapper_3-3 {
+  width: 300%;
+}
+.wrapper_3-4 {
+  width: 100%;
+}
+.wrapper_4-2 {
+  width: 0%;
+}
+.wrapper_4-3 {
+  width: 600%;
+}
+.wrapper_4-4 {
+  width: 800%;
 }
 </style>

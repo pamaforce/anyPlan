@@ -1,21 +1,22 @@
 <template>
   <div id="app" @contextmenu.prevent="onContextmenu">
+    <TopBar :state="state" @change="changeState" />
     <splitpanes class="split-panes" @resize="resize">
-      <pane size="30">
+      <pane :size="percent">
         <AspectTable
           ref="aspectTable"
           :data="goalTable"
           @save="saveData"
-          @input="handleLeftInput"
           @scroll="handleLeftScroll"
+          :state="state"
+          :hasAni="ani"
       /></pane>
-      <pane size="70">
+      <pane :size="100 - percent">
         <MainTable
           ref="mainTable"
           :data="goalTable"
           :hasAni="ani"
           @save="saveData"
-          @input="handleRightInput"
           @scroll="handleRightScroll"
       /></pane>
     </splitpanes>
@@ -28,13 +29,17 @@ import { Splitpanes, Pane } from "splitpanes";
 import AspectTable from "./components/AspectTable.vue";
 import MainTable from "./components/MainTable.vue";
 import BottomBar from "./components/BottomBar.vue";
+import TopBar from "./components/TopBar.vue";
 export default {
   name: "App",
-  components: { Splitpanes, Pane, MainTable, BottomBar, AspectTable },
+  components: { Splitpanes, Pane, MainTable, BottomBar, TopBar, AspectTable },
   data() {
     return {
       storageKey: "anyPlanUserData_1",
+      state: 0,
+      percent: 100,
       goalTable: {
+        state: 0,
         aspect: [],
         goalTree: [],
       },
@@ -49,30 +54,56 @@ export default {
       this.goalTable = JSON.parse(
         window.localStorage.getItem(this.storageKey) ||
           JSON.stringify({
+            state: 0,
             aspect: [],
             goalTree: [],
           })
       );
+      this.state = this.goalTable.state;
+      this.changeState(this.state);
     },
-    saveData(val) {
+    saveData(val, needTableUpdate = true) {
       window.localStorage.setItem(
         this.storageKey,
-        JSON.stringify(this.goalTable)
+        JSON.stringify({ ...this.goalTable, state: this.state })
       );
-      this.$refs.aspectTable.$forceUpdate();
-      if (val) this.$refs.mainTable.initBodyLine();
-      this.$refs.mainTable.$forceUpdate();
+      if (needTableUpdate) {
+        this.$refs.aspectTable.$forceUpdate();
+        if (val) this.$refs.mainTable.initBodyLine();
+        this.$refs.mainTable.$forceUpdate();
+      }
     },
     clearData() {
-      this.goalTable = {
-        aspect: [],
-        goalTree: [],
-      };
+      this.goalTable = { state: 0, aspect: [], goalTree: [] };
+      this.state = 0;
       this.saveData();
+    },
+    changeState(val) {
+      this.state = val;
+      this.saveData(false, false);
+      switch (val) {
+        case 0:
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+          this.percent = 100;
+          break;
+        case 5:
+          setTimeout(() => {
+            this.percent = 30;
+            setTimeout(() => {
+              this.$refs.mainTable.updateTableWidth();
+            }, 250);
+          }, 1550);
+          break;
+
+        default:
+          break;
+      }
     },
     switchAni() {
       this.ani = !this.ani;
-      console.log(this.ani);
     },
     onContextmenu(event) {
       this.$contextmenu({
@@ -122,12 +153,12 @@ export default {
       });
       return false;
     },
-    handleLeftInput(val) {
-      this.$refs.mainTable.canInput = val;
-    },
-    handleRightInput(val) {
-      this.$refs.aspectTable.canInput = val;
-    },
+    // handleLeftInput(val) {
+    //   this.$refs.mainTable.canInput = val;
+    // },
+    // handleRightInput(val) {
+    //   this.$refs.aspectTable.canInput = val;
+    // },
     handleLeftScroll(val) {
       this.$refs.mainTable.updateScroll(val);
     },
@@ -144,7 +175,7 @@ export default {
 <style scoped>
 .split-panes {
   position: relative;
-  height: calc(100vh - 40px);
+  height: calc(100vh - 90px);
 }
 </style>
 <style>
@@ -162,27 +193,35 @@ export default {
 .cursor {
   cursor: pointer;
 }
-.splitpanes--vertical > .splitpanes__splitter {
+.splitpanes__splitter {
+  background-color: #555;
   position: relative;
-  min-width: 6px !important;
-  background-color: white;
 }
-.splitpanes--vertical > .splitpanes__splitter:before {
-  margin-left: -2px;
-}
-.splitpanes--vertical > .splitpanes__splitter:before,
-.splitpanes--vertical > .splitpanes__splitter:after {
+.splitpanes__splitter:before {
   content: "";
   position: absolute;
-  top: 50%;
-  left: 50%;
-  background-color: #00000026;
-  transition: background-color 0.3s;
-  transform: translateY(-50%);
-  width: 1px;
-  height: 30px;
+  left: 0;
+  top: 0;
+  transition: opacity 0.4s;
+  opacity: 0;
+  z-index: 1;
 }
-
+.splitpanes__splitter:hover:before {
+  opacity: 1;
+}
+.splitpanes--vertical > .splitpanes__splitter:before {
+  left: -10px;
+  right: -10px;
+  height: 100%;
+}
+.splitpanes--horizontal > .splitpanes__splitter:before {
+  top: -10px;
+  bottom: -10px;
+  width: 100%;
+}
+/* .splitpanes--vertical .splitpanes__pane {
+  transition: width 1.5s ease-in !important;
+} */
 .el-button + .el-button {
   margin-left: 20px !important;
 }

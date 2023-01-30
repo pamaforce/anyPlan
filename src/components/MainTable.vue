@@ -933,7 +933,7 @@ export default {
             },
             this.hasAni ? 2000 : 0
           );
-        }, 50);
+        }, 100);
       });
     },
     //重新构建Body结构
@@ -1270,9 +1270,9 @@ export default {
     },
     //点击单元格
     clickItem(type, row, val) {
-      if (!this.canInput) return;
-      this.canInput = false;
-      this.$emit("input", false);
+      // if (!this.canInput) return;
+      // this.canInput = false;
+      // this.$emit("input", false);
       if (type === "up") {
         this.supListBody[row][val].showInput = true;
       } else {
@@ -1303,11 +1303,75 @@ export default {
         this.data.goalTree[row][depth][val].desc =
           this.supListBody[row][val].text;
       }
+      if (depth === 0) {
+        console.log(row, this.data.goalTree[row][depth][val].desc);
+        this.findAspectAndUpdateText(
+          row,
+          this.data.goalTree[row][depth][val].desc
+        );
+      }
       this.$emit("save");
-      setTimeout(() => {
-        this.canInput = true;
-        this.$emit("input", true);
-      }, 100);
+      // setTimeout(() => {
+      //   this.canInput = true;
+      //   this.$emit("input", true);
+      // }, 100);
+    },
+    // 寻找对应行的aspect并更新text
+    findAspectAndUpdateText(row, text) {
+      let index = 0;
+      for (let i = 0; i < this.data.aspect.length; i++) {
+        if (this.data.aspect[i].children.length === 0) {
+          if (index === row) {
+            this.data.aspect[i].children = [
+              {
+                text: "方面",
+                goal: {
+                  text: "项目的一生目标",
+                },
+                children: [
+                  {
+                    text: "项目",
+                    goal: {
+                      text: text,
+                    },
+                    children: [],
+                  },
+                ],
+              },
+            ];
+            return;
+          }
+          index += 1;
+        }
+        for (let j = 0; j < this.data.aspect[i].children.length; j++) {
+          if (this.data.aspect[i].children[j].children.length === 0) {
+            if (index === row) {
+              this.data.aspect[i].children[j].children = [
+                {
+                  text: "方面",
+                  goal: {
+                    text: text,
+                  },
+                  children: [],
+                },
+              ];
+              return;
+            }
+            index += 1;
+          }
+          for (
+            let k = 0;
+            k < this.data.aspect[i].children[j].children.length;
+            k++
+          ) {
+            if (index === row) {
+              this.data.aspect[i].children[j].children[k].goal.text = text;
+              return;
+            }
+            index++;
+          }
+        }
+      }
     },
     // 更新表格宽度
     updateTableWidth() {
