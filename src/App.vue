@@ -68,6 +68,8 @@ export default {
           })
       );
       this.state = this.goalTable.state;
+      console.log(this.goalTable);
+      if (this.state > 5) this.state = 5;
       this.changeState(this.state);
     },
     saveData(val, needTableUpdate = true) {
@@ -87,7 +89,6 @@ export default {
       this.saveData();
     },
     changeState(val) {
-      console.log(this.state, val);
       switch (val) {
         case 0:
         case 1:
@@ -104,7 +105,9 @@ export default {
                 this.$refs.mainTable.updateTableWidth();
               }, 250);
             }, 1050);
-          this.$refs.mainTable.changeState(5);
+          setTimeout(() => {
+            this.$refs.mainTable.changeState(5);
+          }, 50);
           break;
         case 6:
           if (this.state <= 5)
@@ -114,7 +117,9 @@ export default {
                 this.$refs.mainTable.updateTableWidth();
               }, 250);
             }, 1050);
-          this.$refs.mainTable.changeState(6);
+          setTimeout(() => {
+            this.$refs.mainTable.changeState(6);
+          }, 50);
           break;
         case 7:
           if (this.state <= 5)
@@ -124,7 +129,9 @@ export default {
                 this.$refs.mainTable.updateTableWidth();
               }, 250);
             }, 1050);
-          this.$refs.mainTable.changeState(6);
+          setTimeout(() => {
+            this.$refs.mainTable.changeState(6);
+          }, 50);
           break;
         case 8:
           if (this.state <= 5)
@@ -134,7 +141,9 @@ export default {
                 this.$refs.mainTable.updateTableWidth();
               }, 250);
             }, 1050);
-          this.$refs.mainTable.changeState(8);
+          setTimeout(() => {
+            this.$refs.mainTable.changeState(8);
+          }, 50);
           break;
         case 9:
           if (this.state <= 5)
@@ -144,7 +153,9 @@ export default {
                 this.$refs.mainTable.updateTableWidth();
               }, 250);
             }, 1050);
-          this.$refs.mainTable.changeState(9);
+          setTimeout(() => {
+            this.$refs.mainTable.changeState(9);
+          }, 50);
           break;
         case 10:
           if (this.state <= 5)
@@ -154,7 +165,9 @@ export default {
                 this.$refs.mainTable.updateTableWidth();
               }, 250);
             }, 1050);
-          this.$refs.mainTable.changeState(10);
+          setTimeout(() => {
+            this.$refs.mainTable.changeState(10);
+          }, 50);
           break;
         case 11:
           if (this.state <= 5)
@@ -164,7 +177,9 @@ export default {
                 this.$refs.mainTable.updateTableWidth();
               }, 250);
             }, 1050);
-          this.$refs.mainTable.changeState(11);
+          setTimeout(() => {
+            this.$refs.mainTable.changeState(11);
+          }, 50);
           break;
 
         default:
@@ -261,7 +276,7 @@ export default {
       this.$refs.aspectTable.updateScroll(val);
     },
   },
-  created() {
+  mounted() {
     this.getData();
   },
 };

@@ -194,8 +194,16 @@
             :ref="'supCellBody' + j"
             :title="item.text"
             @click="clickItem('up', j, item.index)"
+            @contextmenu.prevent.stop="
+              (val) => {
+                onContextmenu(val, j, item.index, 'up');
+              }
+            "
           >
-            <p v-if="!item.showInput">
+            <p
+              v-if="!item.showInput"
+              :class="[{ finish: item.finish, bold: item.bold }]"
+            >
               {{ item.text }}
             </p>
             <input
@@ -225,8 +233,16 @@
             :ref="'subCellBody' + j"
             :title="item.text"
             @click="clickItem('down', j, item.index)"
+            @contextmenu.prevent.stop="
+              (val) => {
+                onContextmenu(val, j, item.index, 'down');
+              }
+            "
           >
-            <p v-if="!item.showInput">
+            <p
+              v-if="!item.showInput"
+              :class="[{ finish: item.finish, bold: item.bold }]"
+            >
               {{ item.text }}
             </p>
             <input
@@ -1610,19 +1626,19 @@ export default {
     },
     //初始化Body样式
     initBodyStyle(row, val) {
+      console.log("123");
       this.$nextTick(() => {
         this.needAni = false;
         let width = this.tableWidth;
-        let subWidth =
-          (width / this.subListBody[0].length) * this.supListBody[0].length;
-        this.supListBody[row].map((item, i) => {
+        let subWidth = (width / this.subList.length) * this.supList.length;
+        this.supListBody[row]?.map((item, i) => {
           this.supListBody[row][i].top = 0;
           this.supListBody[row][i].width = width;
           this.supListBody[row][i].marginLeft = 0;
           this.supListBody[row][i].left = width * (i - val);
         });
         let leftTotal = 0;
-        this.subListBody[row].map((item, i) => {
+        this.subListBody[row]?.map((item, i) => {
           this.subListBody[row][i].top = 3.125;
           this.subListBody[row][i].width = subWidth;
           if (i > 0) leftTotal += subWidth;
@@ -1646,6 +1662,8 @@ export default {
           return [
             {
               text: this.data.goalTree[row]?.[0]?.[0]?.desc ?? "",
+              finish: this.data.goalTree[row]?.[0]?.[0]?.finish ?? false,
+              bold: this.data.goalTree[row]?.[0]?.[0]?.bold ?? false,
               showInput: false,
               top: 0,
               left: 0,
@@ -1659,6 +1677,8 @@ export default {
           for (let i = 0; i < 20; i++) {
             tempList.push({
               text: this.data.goalTree[row]?.[1]?.[i]?.desc ?? "",
+              finish: this.data.goalTree[row]?.[1]?.[i]?.finish ?? false,
+              bold: this.data.goalTree[row]?.[1]?.[i]?.bold ?? false,
               showInput: false,
               top: 0,
               left: 0,
@@ -1676,6 +1696,9 @@ export default {
               isFar = curYear < -5 || curYear > 1;
               tempList.push({
                 text: this.data.goalTree[row]?.[2]?.[j * 5 + i]?.desc ?? "",
+                finish:
+                  this.data.goalTree[row]?.[2]?.[j * 5 + i]?.finish ?? false,
+                bold: this.data.goalTree[row]?.[2]?.[j * 5 + i]?.bold ?? false,
                 showInput: false,
                 top: 0,
                 left: 0,
@@ -1697,6 +1720,12 @@ export default {
                   text:
                     this.data.goalTree[row]?.[3]?.[k * 20 + j * 5 + i]?.desc ??
                     "",
+                  finish:
+                    this.data.goalTree[row]?.[3]?.[k * 20 + j * 5 + i]
+                      ?.finish ?? false,
+                  bold:
+                    this.data.goalTree[row]?.[3]?.[k * 20 + j * 5 + i]?.bold ??
+                    false,
                   showInput: false,
                   top: 0,
                   left: 0,
@@ -1720,6 +1749,12 @@ export default {
                     text:
                       this.data.goalTree[row]?.[4]?.[p * 20 + k * 5 + j * 4 + i]
                         ?.desc ?? "",
+                    finish:
+                      this.data.goalTree[row]?.[4]?.[p * 20 + k * 5 + j * 4 + i]
+                        ?.finish ?? false,
+                    bold:
+                      this.data.goalTree[row]?.[4]?.[p * 20 + k * 5 + j * 4 + i]
+                        ?.bold ?? false,
                     showInput: false,
                     top: 0,
                     left: 0,
@@ -1766,8 +1801,11 @@ export default {
                 nD,
                 totalDay = isRun ? 366 : 365,
                 tM = 0;
+              let x = tempCnt++;
               tempList.push({
-                text: this.data.goalTree[row]?.[5]?.[tempCnt++]?.desc ?? "",
+                text: this.data.goalTree[row]?.[5]?.[x]?.desc ?? "",
+                finish: this.data.goalTree[row]?.[5]?.[x]?.finish ?? false,
+                bold: this.data.goalTree[row]?.[5]?.[x]?.bold ?? false,
                 showInput: false,
                 top: 0,
                 left: 0,
@@ -1785,8 +1823,11 @@ export default {
                   tM++;
                 }
                 tempBase += 7;
+                let x = tempCnt++;
                 tempList.push({
-                  text: this.data.goalTree[row]?.[5]?.[tempCnt++]?.desc ?? "",
+                  text: this.data.goalTree[row]?.[5]?.[x]?.desc ?? "",
+                  finish: this.data.goalTree[row]?.[5]?.[x]?.finish ?? false,
+                  bold: this.data.goalTree[row]?.[5]?.[x]?.bold ?? false,
                   showInput: false,
                   top: 0,
                   left: 0,
@@ -1804,8 +1845,11 @@ export default {
                 }
               }
               if (tempBase < totalDay) {
+                let x = tempCnt++;
                 tempList.push({
-                  text: this.data.goalTree[row]?.[5]?.[tempCnt++]?.desc ?? "",
+                  text: this.data.goalTree[row]?.[5]?.[x]?.desc ?? "",
+                  finish: this.data.goalTree[row]?.[5]?.[x]?.finish ?? false,
+                  bold: this.data.goalTree[row]?.[5]?.[x]?.bold ?? false,
                   showInput: false,
                   top: 0,
                   left: 0,
@@ -1843,8 +1887,11 @@ export default {
             tempArr[1] = isRun ? 29 : 28;
             for (let i = 0; i < 12; i++) {
               for (let k = 1; k <= tempArr[i]; k++) {
+                let x = tempCnt++;
                 tempList.push({
-                  text: this.data.goalTree[row]?.[6]?.[tempCnt++]?.desc ?? "",
+                  text: this.data.goalTree[row]?.[6]?.[x]?.desc ?? "",
+                  finish: this.data.goalTree[row]?.[6]?.[x]?.finish ?? false,
+                  bold: this.data.goalTree[row]?.[6]?.[x]?.bold ?? false,
                   showInput: false,
                   top: 0,
                   left: 0,
@@ -1962,7 +2009,6 @@ export default {
           this.supListBody[row][val].text;
       }
       if (depth === 0) {
-        console.log(row, this.data.goalTree[row][depth][val].desc);
         this.findAspectAndUpdateText(
           row,
           this.data.goalTree[row][depth][val].desc
@@ -2248,18 +2294,108 @@ export default {
           break;
       }
     },
+    //右键菜单
+    onContextmenu(event, row, val, type) {
+      console.log(row, val, type);
+      let depth = 8 - this.currentDepth;
+      if (type === "down") depth++;
+      let item = [];
+      if (type === "up") {
+        if (this.supListBody[row][val].finish) {
+          item.push({
+            label: "取消完成",
+            onClick: () => {
+              this.supListBody[row][val].finish = false;
+              this.data.goalTree[row][depth][val].finish = false;
+              this.$emit("save");
+            },
+          });
+        } else {
+          item.push({
+            label: "完成",
+            onClick: () => {
+              this.supListBody[row][val].finish = true;
+              this.data.goalTree[row][depth][val].finish = true;
+              this.$emit("save");
+            },
+          });
+        }
+        if (this.supListBody[row][val].bold) {
+          item.push({
+            label: "取消重点",
+            onClick: () => {
+              this.supListBody[row][val].bold = false;
+              this.data.goalTree[row][depth][val].bold = false;
+              this.$emit("save");
+            },
+          });
+        } else {
+          item.push({
+            label: "重点",
+            onClick: () => {
+              this.supListBody[row][val].bold = true;
+              this.data.goalTree[row][depth][val].bold = true;
+              this.$emit("save");
+            },
+          });
+        }
+      } else {
+        if (this.subListBody[row][val].finish) {
+          item.push({
+            label: "取消完成",
+            onClick: () => {
+              this.subListBody[row][val].finish = false;
+              this.data.goalTree[row][depth][val].finish = false;
+              this.$emit("save");
+            },
+          });
+        } else {
+          item.push({
+            label: "完成",
+            onClick: () => {
+              this.subListBody[row][val].finish = true;
+              this.data.goalTree[row][depth][val].finish = true;
+              this.$emit("save");
+            },
+          });
+        }
+        if (this.subListBody[row][val].bold) {
+          item.push({
+            label: "取消重点",
+            onClick: () => {
+              this.subListBody[row][val].bold = false;
+              this.data.goalTree[row][depth][val].bold = false;
+              this.$emit("save");
+            },
+          });
+        } else {
+          item.push({
+            label: "重点",
+            onClick: () => {
+              this.subListBody[row][val].bold = true;
+              this.data.goalTree[row][depth][val].bold = true;
+              this.$emit("save");
+            },
+          });
+        }
+      }
+      this.$contextmenu({
+        items: item,
+        event,
+        customClass: "custom-class",
+        zIndex: 3,
+        minWidth: 120,
+      });
+    },
   },
   created() {
-    this.$nextTick(() => {
-      this.$nextTick(() => {
-        setTimeout(() => {
-          this.updateTableWidth();
-        }, 10);
-      });
-    });
     this.birth = new Date(this.initialTimeStamp);
     this.birthYear = this.birth.getFullYear();
-    this.initData();
+    setTimeout(() => {
+      this.$nextTick(() => {
+        this.initData();
+      });
+    }, 10);
   },
 };
 </script>
@@ -2455,6 +2591,11 @@ export default {
 }
 .bold {
   font-weight: 700;
+}
+.finish {
+  color: rgb(170, 170, 170);
+  text-decoration: line-through;
+  font-weight: bold;
 }
 .ani,
 .ani1 {
