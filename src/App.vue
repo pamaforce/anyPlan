@@ -16,16 +16,23 @@
           ref="mainTable"
           :data="goalTable"
           :hasAni="ani"
+          :hasAni2="ani2"
           @save="saveData"
           @scroll="handleRightScroll"
       /></pane>
     </splitpanes>
-    <BottomBar @clear="clearData" @switchAni="switchAni" :ani="ani" />
+    <BottomBar
+      @clear="clearData"
+      @switchAni="switchAni"
+      :ani="ani"
+      :ani2="ani2"
+    />
   </div>
 </template>
 
 <script>
 import { Splitpanes, Pane } from "splitpanes";
+import { Notification } from "element-ui";
 import AspectTable from "./components/AspectTable.vue";
 import MainTable from "./components/MainTable.vue";
 import BottomBar from "./components/BottomBar.vue";
@@ -44,10 +51,12 @@ export default {
         goalTree: [],
       },
       ani: true,
+      ani2: false,
     };
   },
   methods: {
     resize() {
+      console.log(21312);
       this.$refs.mainTable.updateTableWidth();
     },
     getData() {
@@ -95,15 +104,39 @@ export default {
             setTimeout(() => {
               this.$refs.mainTable.updateTableWidth();
             }, 250);
-          }, 1550);
+          }, 1050);
           break;
 
         default:
           break;
       }
     },
-    switchAni() {
-      this.ani = !this.ani;
+    switchAni(val = 1) {
+      switch (val) {
+        case 1:
+          this.ani = !this.ani;
+          Notification.success({
+            title: "成功",
+            message: this.ani ? "打开动画成功" : "关闭动画成功",
+            showClose: false,
+            duration: 2500,
+          });
+          break;
+        case 2:
+          this.ani2 = !this.ani2;
+          Notification.success({
+            title: "成功",
+            message: this.ani
+              ? "成功切换到全部单元格动画"
+              : "成功切换到部分单元格动画",
+            showClose: false,
+            duration: 2500,
+          });
+          break;
+
+        default:
+          break;
+      }
     },
     onContextmenu(event) {
       this.$contextmenu({

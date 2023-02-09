@@ -4,6 +4,8 @@
     <span class="cursor" @click="$emit('clear')">清除数据</span>
     <span class="cursor" @click="$emit('switchAni')"
       >{{ ani ? "关闭" : "打开" }}动画</span
+    ><span class="cursor" @click="$emit('switchAni', 2)"
+      >{{ ani2 ? "切换到部分单元格动画" : "切换到全部单元格动画" }}动画</span
     >
     <span class="cursor">登出</span>
   </div>
@@ -11,7 +13,7 @@
 
 <script>
 export default {
-  props: ["ani"],
+  props: ["ani", "ani2"],
 };
 </script>
 

@@ -1,7 +1,7 @@
 <template>
   <div class="main-table" ref="table">
     <div class="table-header no-select" ref="tableHeader">
-      <template v-for="(item, i) in supPrevList">
+      <template v-for="(item, i) in supPrevList_dom">
         <div
           v-if="!item.hide"
           :class="['sup-prev-cell', { ani: needAni && hasAni }]"
@@ -22,7 +22,7 @@
           </p>
         </div>
       </template>
-      <template v-for="(item, i) in subNextList">
+      <template v-for="(item, i) in subNextList_dom">
         <div
           v-if="!item.hide"
           :class="['sub-next-cell', { ani: needAni && hasAni }]"
@@ -43,7 +43,7 @@
           </p>
         </div>
       </template>
-      <template v-for="(item, i) in supList">
+      <template v-for="(item, i) in supList_dom">
         <div
           v-if="!item.hide"
           :class="['sup-cell', { ani: needAni && hasAni }]"
@@ -57,7 +57,7 @@
           "
           :key="'sup' + i"
           ref="supCell"
-          @click="supToAni(i)"
+          @click="supToAni(item.index)"
           :title="item.text"
         >
           <p>
@@ -65,7 +65,7 @@
           </p>
         </div>
       </template>
-      <template v-for="(item, i) in subList">
+      <template v-for="(item, i) in subList_dom">
         <div
           v-if="!item.hide"
           :class="['sub-cell', { ani: needAni && hasAni }]"
@@ -79,7 +79,7 @@
           "
           :key="'sub' + i"
           ref="subCell"
-          @click="subToAni(i)"
+          @click="subToAni(item.index)"
           :title="item.text"
         >
           <p>
@@ -99,7 +99,7 @@
             : '') + (left !== undefined ? 'left:' + left + 'rem;' : '')
         "
       >
-        <template v-for="(item, i) in supPrevListBody[j]">
+        <template v-for="(item, i) in supPrevListBody_dom[j]">
           <div
             v-if="!item.hide"
             :class="['body-sup-prev-cell', { ani: needAni && hasAni }]"
@@ -120,7 +120,7 @@
             </p>
           </div>
         </template>
-        <template v-for="(item, i) in subNextListBody[j]">
+        <template v-for="(item, i) in subNextListBody_dom[j]">
           <div
             v-if="!item.hide"
             :class="['body-sub-next-cell', { ani: needAni && hasAni }]"
@@ -141,7 +141,7 @@
             </p>
           </div>
         </template>
-        <template v-for="(item, i) in supListBody[j]">
+        <template v-for="(item, i) in supListBody_dom[j]">
           <div
             v-if="!item.hide"
             :class="[
@@ -159,7 +159,7 @@
             :key="'supBody' + j + i"
             :ref="'supCellBody' + j"
             :title="item.text"
-            @click="clickItem('up', j, i)"
+            @click="clickItem('up', j, item.index)"
           >
             <p v-if="!item.showInput">
               {{ item.text }}
@@ -167,12 +167,12 @@
             <input
               v-else
               v-model="item.text"
-              @blur="blurItem('up', j, i)"
-              @keyup.enter="blurItem('up', j, i)"
+              @blur="blurItem('up', j, item.index)"
+              @keyup.enter="blurItem('up', j, item.index)"
             />
           </div>
         </template>
-        <template v-for="(item, i) in subListBody[j]">
+        <template v-for="(item, i) in subListBody_dom[j]">
           <div
             v-if="!item.hide"
             :class="[
@@ -190,7 +190,7 @@
             :key="'subBody' + j + i"
             :ref="'subCellBody' + j"
             :title="item.text"
-            @click="clickItem('down', j, i)"
+            @click="clickItem('down', j, item.index)"
           >
             <p v-if="!item.showInput">
               {{ item.text }}
@@ -198,8 +198,8 @@
             <input
               v-else
               v-model="item.text"
-              @blur="blurItem('down', j, i)"
-              @keyup.enter="blurItem('down', j, i)"
+              @blur="blurItem('down', j, item.index)"
+              @keyup.enter="blurItem('down', j, item.index)"
             />
           </div>
         </template>
@@ -224,6 +224,10 @@ export default {
       type: Boolean,
       default: () => true,
     },
+    hasAni2: {
+      type: Boolean,
+      default: () => false,
+    },
   },
   data: () => ({
     //初始深度
@@ -239,6 +243,14 @@ export default {
     supPrevListBody: [],
     subListBody: [],
     subNextListBody: [],
+    supList_dom: [],
+    supPrevList_dom: [],
+    subList_dom: [],
+    subNextList_dom: [],
+    supListBody_dom: [],
+    supPrevListBody_dom: [],
+    subListBody_dom: [],
+    subNextListBody_dom: [],
     indexList: [0],
     needAni: false,
     birth: null,
@@ -252,6 +264,7 @@ export default {
     left: 0,
   }),
   methods: {
+    //处理Body横向滚动
     handleScrollX() {
       if (this.pauseScroll) return;
       let basePx = parseFloat(
@@ -259,42 +272,60 @@ export default {
       );
       let left = (this.$refs.tableBody.scrollLeft - this.baseOffset) / basePx;
       this.marginLeft = left;
-      this.supPrevList.map((item, i) => {
-        this.supPrevList[i].marginLeft = -left;
-      });
-      this.subNextList.map((item, i) => {
-        this.subNextList[i].marginLeft = -left;
-      });
       this.supList.map((item, i) => {
         this.supList[i].marginLeft = -left;
         let temp = this.supList[i].left - left;
-        let hide = temp > 240 || temp < -120;
+        let hide = temp > 120 || temp < -120;
         this.supList[i].hide = hide;
       });
       this.subList.map((item, i) => {
         this.subList[i].marginLeft = -left;
         let temp = this.subList[i].left - left;
-        let hide = temp > 240 || temp < -120;
+        let hide = temp > 120 || temp < -120;
         this.subList[i].hide = hide;
       });
+      this.supList_dom = [];
+      this.supList.map((item, i) => {
+        if (!item.hide) {
+          this.supList_dom.push(item);
+          this.supList_dom[this.supList_dom.length - 1].index = i;
+        }
+      });
+      this.subList_dom = [];
+      this.subList.map((item, i) => {
+        if (!item.hide) {
+          this.subList_dom.push(item);
+          this.subList_dom[this.subList_dom.length - 1].index = i;
+        }
+      });
       for (let j = 0; j < this.data.goalTree.length; j++) {
-        this.supPrevListBody[j]?.map((item, i) => {
-          this.supPrevListBody[j][i].marginLeft = -left;
-        });
-        this.subNextListBody[j]?.map((item, i) => {
-          this.subNextListBody[j][i].marginLeft = -left;
-        });
         this.supListBody[j].map((item, i) => {
           this.supListBody[j][i].marginLeft = -left;
           let temp = this.supListBody[j][i].left - left;
-          let hide = temp > 240 || temp < -120;
+          let hide = temp > 120 || temp < -120;
           this.supListBody[j][i].hide = hide;
         });
         this.subListBody[j].map((item, i) => {
           this.subListBody[j][i].marginLeft = -left;
           let temp = this.subListBody[j][i].left - left;
-          let hide = temp > 240 || temp < -120;
+          let hide = temp > 120 || temp < -120;
           this.subListBody[j][i].hide = hide;
+        });
+        this.supListBody_dom[j] = [];
+        this.supListBody[j].map((item, i) => {
+          if (!item.hide) {
+            this.supListBody_dom[j].push(item);
+            this.supListBody_dom[j][this.supListBody_dom[j].length - 1].index =
+              i;
+          }
+        });
+        this.subListBody_dom[j] = [];
+        this.subListBody[j].map((item, i) => {
+          if (!item.hide) {
+            this.subListBody_dom[j].push(item);
+            this.subListBody_dom[j][this.subListBody_dom[j].length - 1].index =
+              i;
+          }
         });
       }
       this.$forceUpdate();
@@ -306,6 +337,13 @@ export default {
       this.currentDepth--;
       this.indexList.push(val);
       this.subNextList = this.fetchHeaderData(this.currentDepth - 1);
+      this.subNextList_dom = [];
+      this.subNextList.map((item, i) => {
+        if (!item.hide) {
+          this.subNextList_dom.push(item);
+          this.subNextList_dom[this.subNextList_dom.length - 1].index = i;
+        }
+      });
       this.needAni = false;
       let width = this.tableWidth;
       this.pauseScroll = true;
@@ -324,35 +362,16 @@ export default {
       });
       let supWidth = width * this.subList.length;
       let subWidth = width / this.subList.length;
-      let nextWidth =
-        (this.subList[val].span
-          ? (width / this.subList[val].total) * this.subList[val].span
-          : width / this.subList.length) / this.subNextList.length;
+      let nextWidth = width / this.subList.length / this.subNextList.length;
       let newNextWidth =
         (width / this.subNextList.length) * this.subList.length;
-      let leftTotal = 0;
       this.$nextTick(() => {
-        let subLeftTotal = 0;
-        for (let i = 0; i < val; i++) {
-          subLeftTotal += this.subList[i].span
-            ? ((subWidth * this.subList.length) / this.subList[i].total) *
-              this.subList[i].span
-            : subWidth;
-        }
-        this.subNextList.map((item, i) => {
-          this.subNextList[i].top = 6.4;
-          this.subNextList[i].width = this.subNextList[i].span
-            ? ((nextWidth * this.subNextList.length) /
-                this.subNextList[i].total) *
-              this.subNextList[i].span
-            : nextWidth;
-          if (i > 0)
-            leftTotal += this.subNextList[i - 1].span
-              ? ((nextWidth * this.subNextList.length) /
-                  this.subNextList[i - 1].total) *
-                this.subNextList[i - 1].span
-              : nextWidth;
-          this.subNextList[i].left = subLeftTotal + leftTotal;
+        let subLeftTotal = subWidth * val;
+        this.subNextList_dom.map((item, i) => {
+          this.subNextList_dom[i].top = 6.4;
+          this.subNextList_dom[i].width = nextWidth;
+          this.subNextList_dom[i].left =
+            subLeftTotal + nextWidth * this.subNextList_dom[i].index;
         });
       });
       setTimeout(() => {
@@ -365,28 +384,40 @@ export default {
             supWidth * (i - this.indexList[7 - this.currentDepth] || 0) -
             width * val;
         });
+        this.supList_dom.map((item, i) => {
+          this.supList_dom[i].top = -3.125;
+          this.supList_dom[i].width = supWidth;
+          this.supList_dom[i].marginLeft = 0;
+          this.supList_dom[i].left =
+            supWidth *
+              (this.supList_dom[i].index -
+                this.indexList[7 - this.currentDepth] || 0) -
+            width * val;
+        });
         this.subList.map((item, i) => {
           this.subList[i].top = 0;
           this.subList[i].width = width;
           this.subList[i].marginLeft = 0;
           this.subList[i].left = width * (i - val);
         });
-        let leftTotal = 0;
+        this.subList_dom.map((item, i) => {
+          this.subList_dom[i].top = 0;
+          this.subList_dom[i].width = width;
+          this.subList_dom[i].marginLeft = 0;
+          this.subList_dom[i].left = width * (this.subList_dom[i].index - val);
+        });
         this.subNextList.map((item, i) => {
           this.subNextList[i].top = 3.125;
-          this.subNextList[i].width = this.subNextList[i].span
-            ? ((newNextWidth * this.subNextList.length) /
-                this.subNextList[i].total) *
-              this.subNextList[i].span
-            : newNextWidth;
-          if (i > 0)
-            leftTotal += this.subNextList[i - 1].span
-              ? ((newNextWidth * this.subNextList.length) /
-                  this.subNextList[i - 1].total) *
-                this.subNextList[i - 1].span
-              : newNextWidth;
+          this.subNextList[i].width = newNextWidth;
           this.subNextList[i].marginLeft = 0;
-          this.subNextList[i].left = leftTotal - width * val;
+          this.subNextList[i].left = newNextWidth * i - width * val;
+        });
+        this.subNextList_dom.map((item, i) => {
+          this.subNextList_dom[i].top = 3.125;
+          this.subNextList_dom[i].width = newNextWidth;
+          this.subNextList_dom[i].marginLeft = 0;
+          this.subNextList_dom[i].left =
+            newNextWidth * this.subNextList_dom[i].index - width * val;
         });
         this.$forceUpdate();
         setTimeout(
@@ -411,6 +442,19 @@ export default {
         this.supPrevList[i].width = width * this.supList.length;
         this.supPrevList[i].left = width * (i - val);
       });
+      this.supPrevList_dom = [];
+      this.supPrevList.map((item, i) => {
+        if (!item.hide) {
+          this.supPrevList_dom.push(item);
+          this.supPrevList_dom[this.supPrevList_dom.length - 1].index = i;
+        }
+      });
+      this.supPrevList_dom.map((item, i) => {
+        this.supPrevList_dom[i].top = -3.124;
+        this.supPrevList_dom[i].width = width * this.supList.length;
+        this.supPrevList_dom[i].left =
+          width * (this.supPrevList_dom[i].index - val);
+      });
       this.pauseScroll = true;
       this.$refs.content.style.width = this.supPrevList.length * 100 + "%";
       let percent = parseInt(
@@ -426,12 +470,22 @@ export default {
       this.marginLeft = width * percent;
       this.$refs.tableBody.scrollLeft = this.baseOffset;
       setTimeout(() => {
-        this.supList.map((item, i) => {
-          this.supList[i].hide = false;
-        });
-        this.subList.map((item, i) => {
-          this.subList[i].hide = false;
-        });
+        if (this.hasAni2) {
+          this.supList_dom = [];
+          this.supList.map((item, i) => {
+            this.supList[i].hide = false;
+            this.supList_dom.push(item);
+            this.supList_dom[this.supList_dom.length - 1].index = i;
+            this.supList_dom[this.supList_dom.length - 1].hide = false;
+          });
+          this.subList_dom = [];
+          this.subList.map((item, i) => {
+            this.subList[i].hide = false;
+            this.subList_dom.push(item);
+            this.subList_dom[this.subList_dom.length - 1].index = i;
+            this.subList_dom[this.subList_dom.length - 1].hide = false;
+          });
+        }
         this.needAni = true;
         setTimeout(() => {
           let supWidth =
@@ -445,26 +499,39 @@ export default {
             this.supPrevList[i].width = width;
             this.supPrevList[i].left = width * (i - percent);
           });
+          this.supPrevList_dom.map((item, i) => {
+            this.supPrevList_dom[i].marginLeft = 0;
+            this.supPrevList_dom[i].top = 0;
+            this.supPrevList_dom[i].width = width;
+            this.supPrevList_dom[i].left =
+              width * (this.supPrevList_dom[i].index - percent);
+          });
           this.supList.map((item, i) => {
             this.supList[i].marginLeft = 0;
             this.supList[i].top = 3.125;
-            this.supList[i].width = this.supList[i].span
-              ? ((supWidth * this.supList.length) / this.supList[i].total) *
-                this.supList[i].span
-              : supWidth;
-            if (i > 0)
-              leftTotal += this.supList[i - 1].span
-                ? ((supWidth * this.supList.length) /
-                    this.supList[i - 1].total) *
-                  this.supList[i - 1].span
-                : supWidth;
+            this.supList[i].width = supWidth;
+            if (i > 0) leftTotal += supWidth;
             this.supList[i].left = leftTotal - width * percent;
+          });
+          this.supList_dom.map((item, i) => {
+            this.supList_dom[i].marginLeft = 0;
+            this.supList_dom[i].top = 3.125;
+            this.supList_dom[i].width = supWidth;
+            this.supList_dom[i].left =
+              supWidth * this.supList_dom[i].index - width * percent;
           });
           this.subList.map((item, i) => {
             this.subList[i].marginLeft = 0;
             this.subList[i].top = 6.4;
             this.subList[i].width = subWidth;
             this.subList[i].left = subWidth * i - width * percent;
+          });
+          this.subList_dom.map((item, i) => {
+            this.subList_dom[i].marginLeft = 0;
+            this.subList_dom[i].top = 6.4;
+            this.subList_dom[i].width = subWidth;
+            this.subList_dom[i].left =
+              subWidth * this.subList_dom[i].index - width * percent;
           });
           setTimeout(
             () => {
@@ -487,13 +554,27 @@ export default {
             this.subList = this.subNextList;
             this.supList.map((item, i) => {
               let temp = this.supList[i].left;
-              let hide = temp > 240 || temp < -120;
+              let hide = temp > 120 || temp < -120;
               this.supList[i].hide = hide;
             });
             this.subList.map((item, i) => {
               let temp = this.subList[i].left;
-              let hide = temp > 240 || temp < -120;
+              let hide = temp > 120 || temp < -120;
               this.subList[i].hide = hide;
+            });
+            this.supList_dom = [];
+            this.supList.map((item, i) => {
+              if (!item.hide) {
+                this.supList_dom.push(item);
+                this.supList_dom[this.supList_dom.length - 1].index = i;
+              }
+            });
+            this.subList_dom = [];
+            this.subList.map((item, i) => {
+              if (!item.hide) {
+                this.subList_dom.push(item);
+                this.subList_dom[this.subList_dom.length - 1].index = i;
+              }
             });
             this.$forceUpdate();
           });
@@ -505,13 +586,27 @@ export default {
             this.supList = this.supPrevList;
             this.supList.map((item, i) => {
               let temp = this.supList[i].left;
-              let hide = temp > 240 || temp < -120;
+              let hide = temp > 120 || temp < -120;
               this.supList[i].hide = hide;
             });
             this.subList.map((item, i) => {
               let temp = this.subList[i].left;
-              let hide = temp > 240 || temp < -120;
+              let hide = temp > 120 || temp < -120;
               this.subList[i].hide = hide;
+            });
+            this.supList_dom = [];
+            this.supList.map((item, i) => {
+              if (!item.hide) {
+                this.supList_dom.push(item);
+                this.supList_dom[this.supList_dom.length - 1].index = i;
+              }
+            });
+            this.subList_dom = [];
+            this.subList.map((item, i) => {
+              if (!item.hide) {
+                this.subList_dom.push(item);
+                this.subList_dom[this.subList_dom.length - 1].index = i;
+              }
             });
             this.$forceUpdate();
           });
@@ -561,7 +656,7 @@ export default {
           for (let j = 0; j < 20; j++) {
             for (let i = 0; i < 5; i++) {
               curYear = this.indexList[1] * 5 - 5 * j - i;
-              isFar = curYear < -5 || curYear > 10;
+              isFar = curYear < -5 || curYear > 1;
               tempList.push({
                 text: `${this.birthYear + 5 * j + i}年 ${5 * j + i + 1}岁`,
                 top: 0,
@@ -578,7 +673,7 @@ export default {
           for (let k = 0; k < 20; k++) {
             for (let j = 0; j < 5; j++) {
               curYear = this.indexList[2] - 5 * k - j;
-              isFar = curYear < -3 || curYear > 4;
+              isFar = curYear < -1 || curYear > 1;
               for (let i = 0; i < 4; i++) {
                 tempList.push({
                   text: `第${this.changeNum[i + 1]}季度 ${i * 3 + 1}月-${
@@ -599,7 +694,7 @@ export default {
           for (let p = 0; p < 20; p++) {
             for (let k = 0; k < 5; k++) {
               curYear = this.indexList[3] / 4 - 5 * p - k;
-              isFar = curYear < -1 || curYear > 1;
+              isFar = curYear < 0 || curYear > 0.8;
               for (let j = 0; j < 4; j++) {
                 for (let i = 0; i < 3; i++) {
                   tempList.push({
@@ -640,7 +735,7 @@ export default {
                 tempYear % 400 === 0;
               tempArr[1] = isRun ? 29 : 28;
               isFar = tempYear - curYear;
-              isFar = isFar > 5 || isFar < -5;
+              isFar = isFar > 1 || isFar < -1;
               let tempNo = tempYear >= 2001 ? tempSum : 7 - tempSum,
                 tempBase = 7 - tempNo,
                 tD = 8 - tempNo,
@@ -726,94 +821,58 @@ export default {
       return [];
     },
     //初始化Header样式
-    initHeaderStyle(type, val) {
+    initHeaderStyle(val) {
       this.$nextTick(() => {
         this.needAni = false;
         let width = this.tableWidth;
         let subWidth = (width / this.subList.length) * this.supList.length;
-        let nextWidth = subWidth / this.subNextList.length;
-        let prevWidth = width * this.supList.length;
-        this.supPrevList.map((item, i) => {
-          this.supPrevList[i].top = -3.125;
-          this.supPrevList[i].width = prevWidth;
-          this.supPrevList[i].left =
-            prevWidth * (i - this.indexList[8 - this.currentDepth]) -
-            width * val;
-        });
         this.supList.map((item, i) => {
           this.supList[i].top = 0;
           this.supList[i].width = width;
-          this.supList[i].left =
-            width *
-            (i - (type === "up" ? this.indexList[8 - this.currentDepth] : val));
+          this.supList[i].left = width * (i - val);
+          this.supList[i].marginLeft = 0;
         });
         let leftTotal = 0;
         this.subList.map((item, i) => {
           this.subList[i].top = 3.125;
-          this.subList[i].width = this.subList[i].span
-            ? ((subWidth * this.subList.length) / this.subList[i].total) *
-              this.subList[i].span
-            : subWidth;
-          if (i > 0)
-            leftTotal += this.subList[i - 1].span
-              ? ((subWidth * this.subList.length) / this.subList[i - 1].total) *
-                this.subList[i - 1].span
-              : subWidth;
+          this.subList[i].width = subWidth;
+          if (i > 0) leftTotal += subWidth;
+          this.subList[i].marginLeft = 0;
           this.subList[i].left = leftTotal - width * val;
         });
-        this.subNextList.map((item, i) => {
-          this.subNextList[i].top = 6.4;
-          this.subNextList[i].width = nextWidth;
-          this.subNextList[i].left = nextWidth * i;
-        });
         this.$forceUpdate();
-        if (type === "up") {
-          this.indexList.pop();
-        }
       });
     },
     //Body下钻动画
     subBodyToAni(val) {
       for (let i = 0; i < this.data.goalTree.length; i++) {
         this.subNextListBody[i] = this.fetchBodyData(this.currentDepth - 1, i);
+        this.subNextListBody_dom[i] = [];
+        this.subNextListBody[i].map((item, j) => {
+          if (!item.hide) {
+            this.subNextListBody_dom[i].push(item);
+            this.subNextListBody_dom[i][
+              this.subNextListBody_dom[i].length - 1
+            ].index = j;
+          }
+        });
       }
       this.needAni = false;
       let width = this.tableWidth;
       let supWidth = width * this.subListBody[0].length;
       let subWidth = width / this.subListBody[0].length;
       let nextWidth =
-        (this.subListBody[0][val].span
-          ? (width / this.subListBody[0][val].total) *
-            this.subListBody[0][val].span
-          : width / this.subListBody[0].length) /
-        this.subNextListBody[0].length;
+        width / this.subListBody[0].length / this.subNextListBody[0].length;
       let newNextWidth =
         (width / this.subNextListBody[0].length) * this.subListBody[0].length;
       this.$nextTick(() => {
-        let subLeftTotal = 0;
-        for (let i = 0; i < val; i++) {
-          subLeftTotal += this.subListBody[0][i].span
-            ? ((subWidth * this.subListBody[0].length) /
-                this.subListBody[0][i].total) *
-              this.subListBody[0][i].span
-            : subWidth;
-        }
+        let subLeftTotal = subWidth * val;
         for (let j = 0; j < this.data.goalTree.length; j++) {
-          let leftTotal = 0;
           this.subNextListBody[j].map((item, i) => {
             this.subNextListBody[j][i].top = 6.4;
-            this.subNextListBody[j][i].width = this.subNextListBody[j][i].span
-              ? ((nextWidth * this.subNextListBody[j].length) /
-                  this.subNextListBody[j][i].total) *
-                this.subNextListBody[j][i].span
-              : nextWidth;
-            if (i > 0)
-              leftTotal += this.subNextListBody[j][i - 1].span
-                ? ((nextWidth * this.subNextListBody[j].length) /
-                    this.subNextListBody[j][i - 1].total) *
-                  this.subNextListBody[j][i - 1].span
-                : nextWidth;
-            this.subNextListBody[j][i].left = subLeftTotal + leftTotal;
+            this.subNextListBody[j][i].width = nextWidth;
+            this.subNextListBody[j][i].left =
+              subLeftTotal + nextWidth * this.subNextListBody[j][i].index;
           });
         }
       });
@@ -828,6 +887,16 @@ export default {
               supWidth * (i - this.indexList[7 - this.currentDepth] || 0) -
               width * val;
           });
+          this.supListBody_dom[j].map((item, i) => {
+            this.supListBody_dom[j][i].top = -3.125;
+            this.supListBody_dom[j][i].width = supWidth;
+            this.supListBody_dom[j][i].marginLeft = 0;
+            this.supListBody_dom[j][i].left =
+              supWidth *
+                (this.supListBody_dom[j][i].index -
+                  this.indexList[7 - this.currentDepth] || 0) -
+              width * val;
+          });
           // Todo 0.0000001 诡异
           this.subListBody[j].map((item, i) => {
             this.subListBody[j][i].top = 0.0000001;
@@ -835,22 +904,25 @@ export default {
             this.subListBody[j][i].marginLeft = 0;
             this.subListBody[j][i].left = width * (i - val) + 0.0000001;
           });
-          let leftTotal = 0;
+          this.subListBody_dom[j].map((item, i) => {
+            this.subListBody_dom[j][i].top = 0.0000001;
+            this.subListBody_dom[j][i].width = width;
+            this.subListBody_dom[j][i].marginLeft = 0;
+            this.subListBody_dom[j][i].left =
+              width * (this.subListBody_dom[j][i].index - val) + 0.0000001;
+          });
           this.subNextListBody[j].map((item, i) => {
             this.subNextListBody[j][i].top = 3.125;
-            this.subNextListBody[j][i].width = this.subNextListBody[j][i].span
-              ? ((newNextWidth * this.subNextListBody[j].length) /
-                  this.subNextListBody[j][i].total) *
-                this.subNextListBody[j][i].span
-              : newNextWidth;
-            if (i > 0)
-              leftTotal += this.subNextListBody[j][i - 1].span
-                ? ((newNextWidth * this.subNextListBody[j].length) /
-                    this.subNextListBody[j][i - 1].total) *
-                  this.subNextListBody[j][i - 1].span
-                : newNextWidth;
+            this.subNextListBody[j][i].width = newNextWidth;
             this.subNextListBody[j][i].marginLeft = 0;
-            this.subNextListBody[j][i].left = leftTotal - width * val;
+            this.subNextListBody[j][i].left = newNextWidth * i - width * val;
+          });
+          this.subNextListBody_dom[j].map((item, i) => {
+            this.subNextListBody_dom[j][i].top = 3.125;
+            this.subNextListBody_dom[j][i].width = newNextWidth;
+            this.subNextListBody_dom[j][i].marginLeft = 0;
+            this.subNextListBody_dom[j][i].left =
+              newNextWidth * this.subNextListBody_dom[j][i].index - width * val;
           });
           this.$forceUpdate();
         }
@@ -873,15 +945,48 @@ export default {
           this.supPrevListBody[j][i].width = width * this.supList.length;
           this.supPrevListBody[j][i].left = width * (i - val);
         });
+        this.supPrevListBody_dom[j] = [];
+        this.supPrevListBody[j].map((item, i) => {
+          if (!item.hide) {
+            this.supPrevListBody_dom[j].push(item);
+            this.supPrevListBody_dom[j][
+              this.supPrevListBody_dom[j].length - 1
+            ].index = i;
+          }
+        });
+        this.supPrevListBody_dom[j].map((item, i) => {
+          this.supPrevListBody_dom[j][i].top = -3.124;
+          this.supPrevListBody_dom[j][i].width = width * this.supList.length;
+          this.supPrevListBody_dom[j][i].left =
+            width * (this.supPrevListBody_dom[j][i].index - val);
+        });
       }
       setTimeout(() => {
-        for (let j = 0; j < this.data.goalTree.length; j++) {
-          this.supListBody[j].map((item, i) => {
-            this.supListBody[j][i].hide = false;
-          });
-          this.subListBody[j].map((item, i) => {
-            this.subListBody[j][i].hide = false;
-          });
+        if (this.hasAni2) {
+          for (let j = 0; j < this.data.goalTree.length; j++) {
+            this.supListBody_dom[j] = [];
+            this.supListBody[j].map((item, i) => {
+              this.supListBody[j][i].hide = false;
+              this.supListBody_dom[j].push(item);
+              this.supListBody_dom[j][
+                this.supListBody_dom[j].length - 1
+              ].index = i;
+              this.supListBody_dom[j][
+                this.supListBody_dom[j].length - 1
+              ].hide = false;
+            });
+            this.subListBody_dom[j] = [];
+            this.subListBody[j].map((item, i) => {
+              this.subListBody[j][i].hide = false;
+              this.subListBody_dom[j].push(item);
+              this.subListBody_dom[j][
+                this.subListBody_dom[j].length - 1
+              ].index = i;
+              this.subListBody_dom[j][
+                this.subListBody_dom[j].length - 1
+              ].hide = false;
+            });
+          }
         }
         this.needAni = true;
         setTimeout(() => {
@@ -903,27 +1008,39 @@ export default {
               this.supPrevListBody[j][i].width = width;
               this.supPrevListBody[j][i].left = width * (i - percent);
             });
+            this.supPrevListBody_dom[j].map((item, i) => {
+              this.supPrevListBody_dom[j][i].marginLeft = 0;
+              this.supPrevListBody_dom[j][i].top = 0;
+              this.supPrevListBody_dom[j][i].width = width;
+              this.supPrevListBody_dom[j][i].left =
+                width * (this.supPrevListBody_dom[j][i].index - percent);
+            });
             this.supListBody[j].map((item, i) => {
               this.supListBody[j][i].marginLeft = 0;
               this.supListBody[j][i].top = 3.125;
-              this.supListBody[j][i].width = this.supListBody[j][i].span
-                ? ((supWidth * this.supListBody[j].length) /
-                    this.supListBody[j][i].total) *
-                  this.supListBody[j][i].span
-                : supWidth;
-              if (i > 0)
-                leftTotal += this.supListBody[j][i - 1].span
-                  ? ((supWidth * this.supListBody[j].length) /
-                      this.supListBody[j][i - 1].total) *
-                    this.supListBody[j][i - 1].span
-                  : supWidth;
+              this.supListBody[j][i].width = supWidth;
+              if (i > 0) leftTotal += supWidth;
               this.supListBody[j][i].left = leftTotal - width * percent;
+            });
+            this.supListBody_dom[j].map((item, i) => {
+              this.supListBody_dom[j][i].marginLeft = 0;
+              this.supListBody_dom[j][i].top = 3.125;
+              this.supListBody_dom[j][i].width = supWidth;
+              this.supListBody_dom[j][i].left =
+                supWidth * this.supListBody_dom[j][i].index - width * percent;
             });
             this.subListBody[j].map((item, i) => {
               this.subListBody[j][i].marginLeft = 0;
               this.subListBody[j][i].top = 6.4;
               this.subListBody[j][i].width = subWidth;
               this.subListBody[j][i].left = subWidth * i - width * percent;
+            });
+            this.subListBody_dom[j].map((item, i) => {
+              this.subListBody_dom[j][i].marginLeft = 0;
+              this.subListBody_dom[j][i].top = 6.4;
+              this.subListBody_dom[j][i].width = subWidth;
+              this.subListBody_dom[j][i].left =
+                subWidth * this.subListBody_dom[j][i].index - width * percent;
             });
           }
           this.$forceUpdate();
@@ -946,13 +1063,31 @@ export default {
             this.subListBody[j] = this.subNextListBody[j];
             this.supListBody[j].map((item, i) => {
               let temp = this.supListBody[j][i].left;
-              let hide = temp > 240 || temp < -120;
+              let hide = temp > 120 || temp < -120;
               this.supListBody[j][i].hide = hide;
             });
             this.subListBody[j].map((item, i) => {
               let temp = this.subListBody[j][i].left;
-              let hide = temp > 240 || temp < -120;
+              let hide = temp > 120 || temp < -120;
               this.subListBody[j][i].hide = hide;
+            });
+            this.supListBody_dom[j] = [];
+            this.supListBody[j].map((item, i) => {
+              if (!item.hide) {
+                this.supListBody_dom[j].push(item);
+                this.supListBody_dom[j][
+                  this.supListBody_dom[j].length - 1
+                ].index = i;
+              }
+            });
+            this.subListBody_dom[j] = [];
+            this.subListBody[j].map((item, i) => {
+              if (!item.hide) {
+                this.subListBody_dom[j].push(item);
+                this.subListBody_dom[j][
+                  this.subListBody_dom[j].length - 1
+                ].index = i;
+              }
             });
             this.$forceUpdate();
           }
@@ -964,13 +1099,31 @@ export default {
             this.supListBody[j] = this.supPrevListBody[j];
             this.supListBody[j].map((item, i) => {
               let temp = this.supListBody[j][i].left;
-              let hide = temp > 240 || temp < -120;
+              let hide = temp > 120 || temp < -120;
               this.supListBody[j][i].hide = hide;
             });
             this.subListBody[j].map((item, i) => {
               let temp = this.subListBody[j][i].left;
-              let hide = temp > 240 || temp < -120;
+              let hide = temp > 120 || temp < -120;
               this.subListBody[j][i].hide = hide;
+            });
+            this.supListBody_dom[j] = [];
+            this.supListBody[j].map((item, i) => {
+              if (!item.hide) {
+                this.supListBody_dom[j].push(item);
+                this.supListBody_dom[j][
+                  this.supListBody_dom[j].length - 1
+                ].index = i;
+              }
+            });
+            this.subListBody_dom[j] = [];
+            this.subListBody[j].map((item, i) => {
+              if (!item.hide) {
+                this.subListBody_dom[j].push(item);
+                this.subListBody_dom[j][
+                  this.subListBody_dom[j].length - 1
+                ].index = i;
+              }
             });
             this.$forceUpdate();
           }
@@ -981,57 +1134,27 @@ export default {
       }
     },
     //初始化Body样式
-    initBodyStyle(type, row, val) {
+    initBodyStyle(row, val) {
       this.$nextTick(() => {
         this.needAni = false;
         let width = this.tableWidth;
-        let subWidth = width / this.subListBody[row].length;
-        let nextWidth = subWidth / this.subNextListBody[row]?.length;
-        let prevWidth = width * this.supListBody[row].length;
-        this.$refs["supPrevCellBody" + row]?.map((item, i) => {
-          this.$refs["supPrevCellBody" + row][i].style.top = "-3.125rem";
-          this.$refs["supPrevCellBody" + row][i].style.width =
-            prevWidth + "rem";
-          this.$refs["supPrevCellBody" + row][i].style.left =
-            prevWidth * (i - this.indexList[8 - this.currentDepth]) -
-            width * val +
-            "rem";
-        });
-        this.$refs["supCellBody" + row]?.map((item, i) => {
-          this.$refs["supCellBody" + row][i].style.top = 0;
-          this.$refs["supCellBody" + row][i].style.width = width + "rem";
-          this.$refs["supCellBody" + row][i].style.left =
-            width *
-              (i -
-                (type === "up" ? this.indexList[8 - this.currentDepth] : val)) +
-            "rem";
+        let subWidth =
+          (width / this.subListBody[0].length) * this.supListBody[0].length;
+        this.supListBody[row].map((item, i) => {
+          this.supListBody[row][i].top = 0;
+          this.supListBody[row][i].width = width;
+          this.supListBody[row][i].marginLeft = 0;
+          this.supListBody[row][i].left = width * (i - val);
         });
         let leftTotal = 0;
-        this.$refs["subCellBody" + row]?.map((item, i) => {
-          this.$refs["subCellBody" + row][i].style.top = "3.125rem";
-          this.$refs["subCellBody" + row][i].style.width = this.subListBody[
-            row
-          ][i]?.span
-            ? ((subWidth * this.subListBody[row].length) /
-                this.subListBody[row][i].total) *
-                this.subListBody[row][i].span +
-              "rem"
-            : subWidth + "rem";
-          if (i > 0)
-            leftTotal += this.subListBody[row][i - 1]?.span
-              ? ((subWidth * this.subListBody[row].length) /
-                  this.subListBody[row][i - 1].total) *
-                this.subListBody[row][i - 1].span
-              : subWidth;
-          this.$refs["subCellBody" + row][i].style.left = leftTotal + "rem";
+        this.subListBody[row].map((item, i) => {
+          this.subListBody[row][i].top = 3.125;
+          this.subListBody[row][i].width = subWidth;
+          if (i > 0) leftTotal += subWidth;
+          this.subListBody[row][i].marginLeft = 0;
+          this.subListBody[row][i].left = leftTotal - width * val;
         });
-        this.$refs["subNextCellBody" + row]?.map((item, i) => {
-          this.$refs["subNextCellBody" + row][i].style.top = "6.4rem";
-          this.$refs["subNextCellBody" + row][i].style.width =
-            nextWidth + "rem";
-          this.$refs["subNextCellBody" + row][i].style.left =
-            nextWidth * i + "rem";
-        });
+        this.$forceUpdate();
       });
     },
     //获取Body数据
@@ -1075,7 +1198,7 @@ export default {
           for (let j = 0; j < 20; j++) {
             for (let i = 0; i < 5; i++) {
               curYear = this.indexList[1] * 5 - 5 * j - i;
-              isFar = curYear < -5 || curYear > 10;
+              isFar = curYear < -5 || curYear > 1;
               tempList.push({
                 text: this.data.goalTree[row]?.[2]?.[j * 5 + i]?.desc ?? "",
                 showInput: false,
@@ -1093,7 +1216,7 @@ export default {
           for (let k = 0; k < 20; k++) {
             for (let j = 0; j < 5; j++) {
               curYear = this.indexList[2] - 5 * k - j;
-              isFar = curYear < -3 || curYear > 4;
+              isFar = curYear < -1 || curYear > 1;
               for (let i = 0; i < 4; i++) {
                 tempList.push({
                   text:
@@ -1115,7 +1238,7 @@ export default {
           for (let p = 0; p < 20; p++) {
             for (let k = 0; k < 5; k++) {
               curYear = this.indexList[3] / 4 - 5 * p - k;
-              isFar = curYear < -1 || curYear > 1;
+              isFar = curYear < 0 || curYear > 0.8;
               for (let j = 0; j < 4; j++) {
                 for (let i = 0; i < 3; i++) {
                   tempList.push({
@@ -1161,7 +1284,7 @@ export default {
                 tempYear % 400 === 0;
               tempArr[1] = isRun ? 29 : 28;
               isFar = tempYear - curYear;
-              isFar = isFar > 5 || isFar < -5;
+              isFar = isFar > 1 || isFar < -1;
               let tempNo = tempYear >= 2001 ? tempSum : 7 - tempSum,
                 tempBase = 7 - tempNo,
                 tD = 8 - tempNo,
@@ -1253,19 +1376,65 @@ export default {
     //初始化数据
     initData() {
       this.supList = this.fetchHeaderData(this.currentDepth);
+      this.supList_dom = [];
+      this.supList.map((item, i) => {
+        if (!item.hide) {
+          this.supList_dom.push(item);
+          this.supList_dom[this.supList_dom.length - 1].index = i;
+        }
+      });
       this.subList = this.fetchHeaderData(this.currentDepth - 1);
+      this.subList_dom = [];
+      this.subList.map((item, i) => {
+        if (!item.hide) {
+          this.subList_dom.push(item);
+          this.subList_dom[this.subList_dom.length - 1].index = i;
+        }
+      });
       for (let i = 0; i < this.data.goalTree.length; i++) {
         this.supListBody[i] = this.fetchBodyData(this.currentDepth, i);
+        this.supListBody_dom[i] = [];
+        this.supListBody[i].map((item, j) => {
+          if (!item.hide) {
+            this.supListBody_dom[i].push(item);
+            this.supListBody_dom[i][this.supListBody_dom[i].length - 1].index =
+              j;
+          }
+        });
         this.subListBody[i] = this.fetchBodyData(this.currentDepth - 1, i);
-        this.initBodyStyle("down", i, 0);
+        this.subListBody_dom[i] = [];
+        this.subListBody[i].map((item, j) => {
+          if (!item.hide) {
+            this.subListBody_dom[i].push(item);
+            this.subListBody_dom[i][this.subListBody_dom[i].length - 1].index =
+              j;
+          }
+        });
+        this.initBodyStyle(i, 0);
       }
     },
     //初始化行样式
     initBodyLine() {
       for (let i = 0; i < this.data.goalTree.length; i++) {
         this.supListBody[i] = this.fetchBodyData(this.currentDepth, i);
+        this.supListBody_dom[i] = [];
+        this.supListBody[i].map((item, j) => {
+          if (!item.hide) {
+            this.supListBody_dom[i].push(item);
+            this.supListBody_dom[i][this.supListBody_dom[i].length - 1].index =
+              j;
+          }
+        });
         this.subListBody[i] = this.fetchBodyData(this.currentDepth - 1, i);
-        this.initBodyStyle("down", i, 0);
+        this.subListBody_dom[i] = [];
+        this.subListBody[i].map((item, j) => {
+          if (!item.hide) {
+            this.subListBody_dom[i].push(item);
+            this.subListBody_dom[i][this.subListBody_dom[i].length - 1].index =
+              j;
+          }
+        });
+        this.initBodyStyle(i, 0);
       }
     },
     //点击单元格
@@ -1316,7 +1485,7 @@ export default {
       //   this.$emit("input", true);
       // }, 100);
     },
-    // 寻找对应行的aspect并更新text
+    //寻找对应行的aspect并更新text
     findAspectAndUpdateText(row, text) {
       let index = 0;
       for (let i = 0; i < this.data.aspect.length; i++) {
@@ -1373,18 +1542,20 @@ export default {
         }
       }
     },
-    // 更新表格宽度
+    //更新表格宽度
     updateTableWidth() {
+      if (this.needAni) return;
       let totalWidth = parseFloat(
         document.getElementsByTagName("html")[0].style.fontSize.split("px")[0]
       );
       let tableWidth = this.$refs.table.offsetWidth;
       this.tableWidth = tableWidth / totalWidth;
-      this.initHeaderStyle("down", 0);
+      this.initHeaderStyle(this.indexList[8 - this.currentDepth]);
       for (let i = 0; i < this.data.goalTree.length; i++) {
-        this.initBodyStyle("down", i, 0);
+        this.initBodyStyle(i, this.indexList[8 - this.currentDepth]);
       }
     },
+    //处理Body滚动
     handleScroll() {
       if (this.$refs.tableBody.scrollTop === this.cacheNum) {
         this.handleScrollX();
@@ -1393,6 +1564,7 @@ export default {
       }
       this.cacheNum = this.$refs.tableBody.scrollTop;
     },
+    //同步Body垂直方向滚动轴
     updateScroll(val) {
       this.$refs.tableBody.scrollTop = val;
     },
@@ -1400,7 +1572,9 @@ export default {
   created() {
     this.$nextTick(() => {
       this.$nextTick(() => {
-        this.updateTableWidth();
+        setTimeout(() => {
+          this.updateTableWidth();
+        }, 10);
       });
     });
     this.birth = new Date(this.initialTimeStamp);

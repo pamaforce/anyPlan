@@ -866,7 +866,7 @@ export default {
   border: 1px solid #555;
   min-width: 0;
   width: 100%;
-  transition: all 1.5s ease-in;
+  transition: all 1s ease-in;
 }
 .item-label-l {
   width: 100%;
@@ -874,7 +874,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 1.5s ease-in;
+  transition: all 1s ease-in;
 }
 .item-label-r {
   width: 0%;
@@ -883,7 +883,7 @@ export default {
   align-items: center;
   justify-content: center;
   border-left: 1px solid #555;
-  transition: all 1.5s ease-in;
+  transition: all 1s ease-in;
 }
 .aspect-body-item {
   width: 100%;
@@ -928,14 +928,14 @@ export default {
   border-right: 1px solid #555;
   min-width: 0;
   width: 100%;
-  transition: all 1.5s ease-in;
+  transition: all 1s ease-in;
 }
 .wrapper_1 {
   width: 200%;
   display: flex;
   flex-direction: column;
   min-width: 0;
-  transition: all 1.5s ease-in;
+  transition: all 1s ease-in;
 }
 .wrapper_2 {
   width: 100%;
@@ -947,14 +947,14 @@ export default {
   box-sizing: border-box;
   border-right: 1px solid #555;
   min-width: 0;
-  transition: all 1.5s ease-in;
+  transition: all 1s ease-in;
 }
 .wrapper_4 {
   width: 100%;
   display: flex;
   flex-direction: column;
   min-width: 0;
-  transition: all 1.5s ease-in;
+  transition: all 1s ease-in;
 }
 .wrapper_5 {
   width: 100%;
