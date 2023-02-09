@@ -6,7 +6,11 @@
           v-if="!item.hide"
           :class="[
             'sup-prev-cell',
-            { ani: needAni && hasAni, current: item.current, bold: item.bold },
+            {
+              ['ani' + speed]: needAni && hasAni,
+              current: item.current,
+              bold: item.bold,
+            },
           ]"
           :style="
             (item.top !== undefined ? 'top:' + item.top + 'rem;' : '') +
@@ -30,7 +34,11 @@
           v-if="!item.hide"
           :class="[
             'sub-next-cell',
-            { ani: needAni && hasAni, current: item.current, bold: item.bold },
+            {
+              ['ani' + speed]: needAni && hasAni,
+              current: item.current,
+              bold: item.bold,
+            },
           ]"
           :style="
             (item.top !== undefined ? 'top:' + item.top + 'rem;' : '') +
@@ -54,7 +62,11 @@
           v-if="!item.hide"
           :class="[
             'sup-cell',
-            { ani: needAni && hasAni, current: item.current, bold: item.bold },
+            {
+              ['ani' + speed]: needAni && hasAni,
+              current: item.current,
+              bold: item.bold,
+            },
           ]"
           :style="
             (item.top !== undefined ? 'top:' + item.top + 'rem;' : '') +
@@ -79,7 +91,11 @@
           v-if="!item.hide"
           :class="[
             'sub-cell',
-            { ani: needAni && hasAni, current: item.current, bold: item.bold },
+            {
+              ['ani' + speed]: needAni && hasAni,
+              current: item.current,
+              bold: item.bold,
+            },
           ]"
           :style="
             (item.top !== undefined ? 'top:' + item.top + 'rem;' : '') +
@@ -114,7 +130,10 @@
         <template v-for="(item, i) in supPrevListBody_dom[j]">
           <div
             v-if="!item.hide"
-            :class="['body-sup-prev-cell', { ani: needAni && hasAni }]"
+            :class="[
+              'body-sup-prev-cell',
+              { ['ani' + speed]: needAni && hasAni },
+            ]"
             :style="
               (item.top !== undefined ? 'top:' + item.top + 'rem;' : '') +
               (item.width !== undefined ? 'width:' + item.width + 'rem;' : '') +
@@ -135,7 +154,10 @@
         <template v-for="(item, i) in subNextListBody_dom[j]">
           <div
             v-if="!item.hide"
-            :class="['body-sub-next-cell', { ani: needAni && hasAni }]"
+            :class="[
+              'body-sub-next-cell',
+              { ['ani' + speed]: needAni && hasAni },
+            ]"
             :style="
               (item.top !== undefined ? 'top:' + item.top + 'rem;' : '') +
               (item.width !== undefined ? 'width:' + item.width + 'rem;' : '') +
@@ -158,7 +180,7 @@
             v-if="!item.hide"
             :class="[
               'body-sup-cell',
-              { ani: needAni && hasAni, border: needAni },
+              { ['ani' + speed]: needAni && hasAni, border: needAni },
             ]"
             :style="
               (item.top !== undefined ? 'top:' + item.top + 'rem;' : '') +
@@ -189,7 +211,7 @@
             v-if="!item.hide"
             :class="[
               'body-sub-cell',
-              { ani: needAni && hasAni, border: needAni },
+              { ['ani' + speed]: needAni && hasAni, border: needAni },
             ]"
             :style="
               (item.top !== undefined ? 'top:' + item.top + 'rem;' : '') +
@@ -274,6 +296,7 @@ export default {
     cacheNum: 0,
     marginLeft: 0,
     left: 0,
+    speed: 1,
   }),
   methods: {
     //处理Body横向滚动
@@ -464,7 +487,7 @@ export default {
           () => {
             this.rebuildHeader("down");
           },
-          this.hasAni ? 2000 : 0
+          this.hasAni ? 2000 / this.speed : 0
         );
       }, 50);
       if (this.data.goalTree.length) this.subBodyToAni(val);
@@ -581,7 +604,7 @@ export default {
             () => {
               this.rebuildHeader("up");
             },
-            this.hasAni ? 2000 : 0
+            this.hasAni ? 2000 / this.speed : 0
           );
         }, 50);
         this.supBodyToAni(val);
@@ -659,7 +682,7 @@ export default {
                 () => {
                   this.rebuildHeader("down");
                 },
-                this.hasAni ? 2000 : 0
+                this.hasAni ? 2000 / this.speed : 0
               );
             }, 50);
             if (this.data.goalTree.length) {
@@ -744,7 +767,7 @@ export default {
                   () => {
                     this.rebuildBody("down");
                   },
-                  this.hasAni ? 2000 : 0
+                  this.hasAni ? 2000 / this.speed : 0
                 );
               }, 50);
             }
@@ -825,7 +848,7 @@ export default {
                   () => {
                     this.rebuildHeader("up");
                   },
-                  this.hasAni ? 2000 : 0
+                  this.hasAni ? 2000 / this.speed : 0
                 );
               }, 50);
               {
@@ -925,7 +948,7 @@ export default {
                       () => {
                         this.rebuildBody("up");
                       },
-                      this.hasAni ? 2000 : 0
+                      this.hasAni ? 2000 / this.speed : 0
                     );
                   }, 100);
                 });
@@ -1382,7 +1405,7 @@ export default {
           () => {
             this.rebuildBody("down");
           },
-          this.hasAni ? 2000 : 0
+          this.hasAni ? 2000 / this.speed : 0
         );
       }, 50);
     },
@@ -1500,7 +1523,7 @@ export default {
             () => {
               this.rebuildBody("up");
             },
-            this.hasAni ? 2000 : 0
+            this.hasAni ? 2000 / this.speed : 0
           );
         }, 100);
       });
@@ -2034,6 +2057,197 @@ export default {
     updateScroll(val) {
       this.$refs.tableBody.scrollTop = val;
     },
+    //改变全局状态
+    changeState(state) {
+      switch (state) {
+        case 5:
+          {
+            this.speed = 8 - this.currentDepth;
+            let fun = () => {
+              if (this.currentDepth !== 8) {
+                this.supToAni(this.indexList[8 - this.currentDepth]);
+                setTimeout(() => {
+                  fun();
+                }, 2000 / this.speed);
+              } else {
+                this.speed = 1;
+              }
+            };
+            fun();
+          }
+          break;
+        case 6:
+          {
+            if (this.currentDepth === 8) {
+              this.speed = 1;
+              let val = 0;
+              for (let i = 0; i < this.subList.length; i++) {
+                if (this.subList[i].current) {
+                  val = i;
+                  break;
+                }
+              }
+              this.subToAni(val);
+            } else if (this.currentDepth !== 7) {
+              this.speed = 7 - this.currentDepth;
+              let fun = () => {
+                if (this.currentDepth !== 7) {
+                  this.supToAni(this.indexList[8 - this.currentDepth]);
+                  setTimeout(() => {
+                    fun();
+                  }, 2000 / this.speed);
+                } else {
+                  this.speed = 1;
+                }
+              };
+              fun();
+            }
+          }
+          break;
+        case 8:
+          {
+            if (this.currentDepth > 6) {
+              this.speed = this.currentDepth - 6;
+              let fun = () => {
+                if (this.currentDepth !== 6) {
+                  let val = 0;
+                  for (let i = 0; i < this.subList.length; i++) {
+                    if (this.subList[i].current) {
+                      val = i;
+                      break;
+                    }
+                  }
+                  this.subToAni(val);
+                  setTimeout(() => {
+                    fun();
+                  }, 2000 / this.speed);
+                } else {
+                  this.speed = 1;
+                }
+              };
+              fun();
+            } else if (this.currentDepth !== 6) {
+              this.speed = 6 - this.currentDepth;
+              let fun = () => {
+                if (this.currentDepth !== 6) {
+                  this.supToAni(this.indexList[8 - this.currentDepth]);
+                  setTimeout(() => {
+                    fun();
+                  }, 2000 / this.speed);
+                } else {
+                  this.speed = 1;
+                }
+              };
+              fun();
+            }
+          }
+          break;
+        case 9:
+          {
+            if (this.currentDepth > 5) {
+              this.speed = this.currentDepth - 5;
+              let fun = () => {
+                if (this.currentDepth !== 5) {
+                  let val = 0;
+                  for (let i = 0; i < this.subList.length; i++) {
+                    if (this.subList[i].current) {
+                      val = i;
+                      break;
+                    }
+                  }
+                  this.subToAni(val);
+                  setTimeout(() => {
+                    fun();
+                  }, 2000 / this.speed);
+                } else {
+                  this.speed = 1;
+                }
+              };
+              fun();
+            } else if (this.currentDepth !== 5) {
+              this.speed = 5 - this.currentDepth;
+              let fun = () => {
+                if (this.currentDepth !== 5) {
+                  this.supToAni(this.indexList[8 - this.currentDepth]);
+                  setTimeout(() => {
+                    fun();
+                  }, 2000 / this.speed);
+                } else {
+                  this.speed = 1;
+                }
+              };
+              fun();
+            }
+          }
+          break;
+        case 10:
+          {
+            if (this.currentDepth > 4) {
+              this.speed = this.currentDepth - 4;
+              let fun = () => {
+                if (this.currentDepth !== 4) {
+                  let val = 0;
+                  for (let i = 0; i < this.subList.length; i++) {
+                    if (this.subList[i].current) {
+                      val = i;
+                      break;
+                    }
+                  }
+                  this.subToAni(val);
+                  setTimeout(() => {
+                    fun();
+                  }, 2000 / this.speed);
+                } else {
+                  this.speed = 1;
+                }
+              };
+              fun();
+            } else if (this.currentDepth !== 4) {
+              this.speed = 4 - this.currentDepth;
+              let fun = () => {
+                if (this.currentDepth !== 4) {
+                  this.supToAni(this.indexList[8 - this.currentDepth]);
+                  setTimeout(() => {
+                    fun();
+                  }, 2000 / this.speed);
+                } else {
+                  this.speed = 1;
+                }
+              };
+              fun();
+            }
+          }
+          break;
+        case 11:
+          {
+            if (this.currentDepth > 3) {
+              this.speed = this.currentDepth - 3;
+              let fun = () => {
+                if (this.currentDepth !== 3) {
+                  let val = 0;
+                  for (let i = 0; i < this.subList.length; i++) {
+                    if (this.subList[i].current) {
+                      val = i;
+                      break;
+                    }
+                  }
+                  this.subToAni(val);
+                  setTimeout(() => {
+                    fun();
+                  }, 2000 / this.speed);
+                } else {
+                  this.speed = 1;
+                }
+              };
+              fun();
+            }
+          }
+          break;
+
+        default:
+          break;
+      }
+    },
   },
   created() {
     this.$nextTick(() => {
@@ -2242,10 +2456,35 @@ export default {
 .bold {
   font-weight: 700;
 }
-.ani {
+.ani,
+.ani1 {
   transition: margin-left 1s cubic-bezier(0, 0.73, 0.04, 0.98),
     left 1s cubic-bezier(0, 0.73, 0.04, 0.98),
     width 1s cubic-bezier(0, 0.73, 0.04, 0.98),
     top 1s cubic-bezier(0, 0.73, 0.04, 0.98) 1s;
+}
+.ani2 {
+  transition: margin-left 0.5s cubic-bezier(0, 0.73, 0.04, 0.98),
+    left 0.5s cubic-bezier(0, 0.73, 0.04, 0.98),
+    width 0.5s cubic-bezier(0, 0.73, 0.04, 0.98),
+    top 0.5s cubic-bezier(0, 0.73, 0.04, 0.98) 0.5s;
+}
+.ani3 {
+  transition: margin-left 0.33s cubic-bezier(0, 0.73, 0.04, 0.98),
+    left 0.33s cubic-bezier(0, 0.73, 0.04, 0.98),
+    width 0.33s cubic-bezier(0, 0.73, 0.04, 0.98),
+    top 0.33s cubic-bezier(0, 0.73, 0.04, 0.98) 0.33s;
+}
+.ani4 {
+  transition: margin-left 0.25s cubic-bezier(0, 0.73, 0.04, 0.98),
+    left 0.25s cubic-bezier(0, 0.73, 0.04, 0.98),
+    width 0.25s cubic-bezier(0, 0.73, 0.04, 0.98),
+    top 0.25s cubic-bezier(0, 0.73, 0.04, 0.98) 0.25s;
+}
+.ani5 {
+  transition: margin-left 0.2s cubic-bezier(0, 0.73, 0.04, 0.98),
+    left 0.2s cubic-bezier(0, 0.73, 0.04, 0.98),
+    width 0.2s cubic-bezier(0, 0.73, 0.04, 0.98),
+    top 0.2s cubic-bezier(0, 0.73, 0.04, 0.98) 0.2s;
 }
 </style>

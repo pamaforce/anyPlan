@@ -56,7 +56,6 @@ export default {
   },
   methods: {
     resize() {
-      console.log(21312);
       this.$refs.mainTable.updateTableWidth();
     },
     getData() {
@@ -88,8 +87,7 @@ export default {
       this.saveData();
     },
     changeState(val) {
-      this.state = val;
-      this.saveData(false, false);
+      console.log(this.state, val);
       switch (val) {
         case 0:
         case 1:
@@ -99,17 +97,81 @@ export default {
           this.percent = 100;
           break;
         case 5:
-          setTimeout(() => {
-            this.percent = 30;
+          if (this.state <= 5)
             setTimeout(() => {
-              this.$refs.mainTable.updateTableWidth();
-            }, 250);
-          }, 1050);
+              this.percent = 30;
+              setTimeout(() => {
+                this.$refs.mainTable.updateTableWidth();
+              }, 250);
+            }, 1050);
+          this.$refs.mainTable.changeState(5);
+          break;
+        case 6:
+          if (this.state <= 5)
+            setTimeout(() => {
+              this.percent = 30;
+              setTimeout(() => {
+                this.$refs.mainTable.updateTableWidth();
+              }, 250);
+            }, 1050);
+          this.$refs.mainTable.changeState(6);
+          break;
+        case 7:
+          if (this.state <= 5)
+            setTimeout(() => {
+              this.percent = 30;
+              setTimeout(() => {
+                this.$refs.mainTable.updateTableWidth();
+              }, 250);
+            }, 1050);
+          this.$refs.mainTable.changeState(6);
+          break;
+        case 8:
+          if (this.state <= 5)
+            setTimeout(() => {
+              this.percent = 30;
+              setTimeout(() => {
+                this.$refs.mainTable.updateTableWidth();
+              }, 250);
+            }, 1050);
+          this.$refs.mainTable.changeState(8);
+          break;
+        case 9:
+          if (this.state <= 5)
+            setTimeout(() => {
+              this.percent = 30;
+              setTimeout(() => {
+                this.$refs.mainTable.updateTableWidth();
+              }, 250);
+            }, 1050);
+          this.$refs.mainTable.changeState(9);
+          break;
+        case 10:
+          if (this.state <= 5)
+            setTimeout(() => {
+              this.percent = 30;
+              setTimeout(() => {
+                this.$refs.mainTable.updateTableWidth();
+              }, 250);
+            }, 1050);
+          this.$refs.mainTable.changeState(10);
+          break;
+        case 11:
+          if (this.state <= 5)
+            setTimeout(() => {
+              this.percent = 30;
+              setTimeout(() => {
+                this.$refs.mainTable.updateTableWidth();
+              }, 250);
+            }, 1050);
+          this.$refs.mainTable.changeState(11);
           break;
 
         default:
           break;
       }
+      this.state = val;
+      this.saveData(false, false);
     },
     switchAni(val = 1) {
       switch (val) {
