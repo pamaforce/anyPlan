@@ -1181,7 +1181,7 @@ export default {
               tempArr[1] = isRun ? 29 : 28;
               isFar = tempYear - curYear;
               isFar = isFar > 1 || isFar < -1;
-              let tempNo = tempYear >= 2001 ? tempSum : 7 - tempSum,
+              let tempNo = 7 - tempSum,
                 tempBase = 7 - tempNo,
                 tD = 8 - tempNo,
                 nD,
@@ -1205,12 +1205,12 @@ export default {
               });
               while (tempBase + 7 <= totalDay) {
                 nD = tD + 6;
-                let cFlag = nowDate.getDay() >= tD;
+                let cFlag = nowDate.getDate() >= tD;
                 if (nD > tempArr[tM]) {
                   nD -= tempArr[tM];
                   tM++;
                 }
-                cFlag = cFlag && nowDate.getDay() <= nD;
+                cFlag = cFlag && nowDate.getDate() <= nD;
                 tempBase += 7;
                 tempList.push({
                   text: `第${tempF++}周 ${tD + "号-" + nD + "号"}`,
@@ -1795,7 +1795,7 @@ export default {
               tempArr[1] = isRun ? 29 : 28;
               isFar = tempYear - curYear;
               isFar = isFar > 1 || isFar < -1;
-              let tempNo = tempYear >= 2001 ? tempSum : 7 - tempSum,
+              let tempNo = 7 - tempSum,
                 tempBase = 7 - tempNo,
                 tD = 8 - tempNo,
                 nD,
@@ -2386,6 +2386,11 @@ export default {
         zIndex: 3,
         minWidth: 120,
       });
+    },
+  },
+  watch: {
+    currentDepth(val) {
+      this.$emit("state", val);
     },
   },
   created() {

@@ -19,6 +19,7 @@
           :hasAni2="ani2"
           @save="saveData"
           @scroll="handleRightScroll"
+          @state="handleDepthChange"
       /></pane>
     </splitpanes>
     <BottomBar
@@ -274,6 +275,12 @@ export default {
     },
     handleRightScroll(val) {
       this.$refs.aspectTable.updateScroll(val);
+    },
+    handleDepthChange(val) {
+      if (val <= 6) {
+        val--;
+      }
+      this.state = 13 - val;
     },
   },
   mounted() {
