@@ -1803,8 +1803,16 @@ export default {
       }
       this.$forceUpdate();
       this.$nextTick(() => {
-        document.querySelector("input")?.focus();
-        document.querySelector("input")?.select();
+        let input = document.querySelector("input");
+        if (!input) return;
+        let offset =
+          input.getBoundingClientRect().x +
+          input.getBoundingClientRect().width -
+          document.body.clientWidth;
+        if (offset > 5) {
+          this.$refs.tableBody.scrollLeft += offset;
+        }
+        document.querySelector("input").select();
       });
     },
     //输入框失焦
