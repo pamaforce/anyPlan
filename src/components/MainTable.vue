@@ -384,7 +384,6 @@ export default {
     //点击Header底部事件处理
     subToAni(val) {
       if (this.needAni) return;
-      if (this.currentDepth === 4) this.specialHandle("down", val);
       if (this.currentDepth === 3) return;
       this.currentDepth--;
       this.indexList.push(val);
@@ -399,9 +398,7 @@ export default {
       this.needAni = false;
       let width = this.tableWidth;
       this.pauseScroll = true;
-      if (this.currentDepth > 3)
-        this.$refs.content.style.width = this.subList.length * 100 + "%";
-      else this.$refs.content.style.width = this.supList.length * 100 + "%";
+      this.$refs.content.style.width = this.subList.length * 100 + "%";
       this.baseOffset =
         width *
         val *
@@ -409,6 +406,15 @@ export default {
           document.getElementsByTagName("html")[0].style.fontSize.split("px")[0]
         );
       this.$refs.tableBody.scrollLeft = this.baseOffset;
+      if (this.$refs.tableBody.scrollLeft < this.baseOffset) {
+        this.$refs.content.style.width =
+          parseFloat(
+            window.getComputedStyle(this.$refs.content).width.split("px")[0]
+          ) +
+          (this.baseOffset - this.$refs.tableBody.scrollLeft) +
+          "px";
+        this.$refs.tableBody.scrollLeft = this.baseOffset;
+      }
       this.left = width * val;
       this.marginLeft = 0;
       setTimeout(() => {
@@ -433,40 +439,84 @@ export default {
         this.supList.map((item, i) => {
           this.supList[i].top = -3.125;
           this.supList[i].marginLeft = 0;
-          if (this.currentDepth !== 3) {
-            this.supList[i].width = supWidth;
-            this.supList[i].left =
-              supWidth * (i - this.indexList[7 - this.currentDepth] || 0) -
-              width * val;
-          }
+          this.supList[i].width = supWidth;
+          this.supList[i].left =
+            supWidth * (i - this.indexList[7 - this.currentDepth] || 0) -
+            width * val;
         });
         this.supList_dom.map((item, i) => {
           this.supList_dom[i].top = -3.125;
           this.supList_dom[i].marginLeft = 0;
-          if (this.currentDepth !== 3) {
-            this.supList_dom[i].width = supWidth;
-            this.supList_dom[i].left =
-              supWidth *
-                (this.supList_dom[i].index -
-                  this.indexList[7 - this.currentDepth] || 0) -
-              width * val;
-          }
+          this.supList_dom[i].width = supWidth;
+          this.supList_dom[i].left =
+            supWidth *
+              (this.supList_dom[i].index -
+                this.indexList[7 - this.currentDepth] || 0) -
+            width * val;
         });
+        let firstWidth = (width * this.subList[0].daySpan) / 7;
+        let lastWidth =
+          (width * this.subList[this.subList.length - 1].daySpan) / 7;
+        if (this.currentDepth === 3 && val !== 0) {
+          this.pauseScroll = true;
+          this.baseOffset =
+            width *
+            val *
+            parseFloat(
+              document
+                .getElementsByTagName("html")[0]
+                .style.fontSize.split("px")[0]
+            );
+          this.$refs.tableBody.scrollLeft =
+            this.baseOffset -
+            (width - firstWidth) *
+              parseFloat(
+                document
+                  .getElementsByTagName("html")[0]
+                  .style.fontSize.split("px")[0]
+              );
+          this.left = width * val;
+          this.marginLeft = firstWidth - width;
+          setTimeout(() => {
+            this.pauseScroll = false;
+          });
+        }
         this.subList.map((item, i) => {
           this.subList[i].top = 0;
           this.subList[i].marginLeft = 0;
-          if (this.currentDepth !== 3) {
-            this.subList[i].width = width;
-            this.subList[i].left = width * (i - val);
+          this.subList[i].width = width;
+          this.subList[i].left = width * (i - val);
+          if (this.currentDepth === 3) {
+            if (val !== 0) this.subList[i].marginLeft = width - firstWidth;
+            if (i === 0) {
+              this.subList[i].width = firstWidth;
+              this.subList[i].left = width * (i - val);
+            } else {
+              this.subList[i].left = width * (i - val - 1) + firstWidth;
+            }
+            if (i === this.subList.length - 1) {
+              this.subList[i].width = lastWidth;
+            }
           }
         });
         this.subList_dom.map((item, i) => {
           this.subList_dom[i].top = 0;
           this.subList_dom[i].marginLeft = 0;
-          if (this.currentDepth !== 3) {
-            this.subList_dom[i].width = width;
-            this.subList_dom[i].left =
-              width * (this.subList_dom[i].index - val);
+          this.subList_dom[i].width = width;
+          this.subList_dom[i].left = width * (this.subList_dom[i].index - val);
+          if (this.currentDepth === 3) {
+            if (val !== 0) this.subList_dom[i].marginLeft = width - firstWidth;
+            if (this.subList_dom[i].index === 0) {
+              this.subList_dom[i].width = firstWidth;
+              this.subList_dom[i].left =
+                width * (this.subList_dom[i].index - val);
+            } else {
+              this.subList_dom[i].left =
+                width * (this.subList_dom[i].index - val - 1) + firstWidth;
+            }
+            if (this.subList_dom[i].index === this.subList.length - 1) {
+              this.subList_dom[i].width = lastWidth;
+            }
           }
         });
         let wT = 0,
@@ -480,7 +530,7 @@ export default {
               ((12 * width) / this.subNextList[i].yearDays) *
               this.subNextList[i].daySpan;
           } else if (this.currentDepth === 3) {
-            w = (12 * width) / this.subNextList[i].yearDays;
+            w = width / 7;
           }
           wA[i] = w;
           if (i > 0) {
@@ -490,6 +540,9 @@ export default {
           this.subNextList[i].width = w;
           this.subNextList[i].marginLeft = 0;
           this.subNextList[i].left = wT - width * val;
+          if (this.currentDepth === 3 && val !== 0) {
+            this.subNextList[i].marginLeft = width - firstWidth;
+          }
         });
         this.subNextList_dom.map((item, i) => {
           this.subNextList_dom[i].top = 3.125;
@@ -497,6 +550,9 @@ export default {
           this.subNextList_dom[i].marginLeft = 0;
           this.subNextList_dom[i].left =
             wAT[this.subNextList_dom[i].index] - width * val;
+          if (this.currentDepth === 3 && val !== 0) {
+            this.subNextList_dom[i].marginLeft = width - firstWidth;
+          }
         });
         this.$forceUpdate();
         setTimeout(
@@ -511,10 +567,6 @@ export default {
     //点击Header顶部事件处理
     supToAni(val) {
       if (this.needAni) return;
-      if (this.currentDepth === 3) {
-        this.specialHandle("up", val);
-        return;
-      }
       if (this.currentDepth === 8) return;
       this.currentDepth++;
       this.needAni = false;
@@ -575,7 +627,6 @@ export default {
             (width / this.supList.length) * this.supPrevList.length;
           let subWidth =
             (width / this.subList.length) * this.supPrevList.length;
-          let leftTotal = 0;
           this.supPrevList.map((item, i) => {
             this.supPrevList[i].marginLeft = 0;
             this.supPrevList[i].top = 0;
@@ -589,19 +640,32 @@ export default {
             this.supPrevList_dom[i].left =
               width * (this.supPrevList_dom[i].index - percent);
           });
+          let wT = 0,
+            wA = [],
+            wAT = [0];
           this.supList.map((item, i) => {
-            this.supList[i].marginLeft = 0;
             this.supList[i].top = 3.125;
-            this.supList[i].width = supWidth;
-            if (i > 0) leftTotal += supWidth;
-            this.supList[i].left = leftTotal - width * percent;
+            let w = supWidth;
+            if (this.currentDepth === 4) {
+              w =
+                ((12 * width) / this.supList[i].yearDays) *
+                this.supList[i].daySpan;
+            }
+            wA[i] = w;
+            if (i > 0) {
+              wT += wA[i - 1];
+              wAT[i] = wT;
+            }
+            this.supList[i].width = w;
+            this.supList[i].marginLeft = 0;
+            this.supList[i].left = wT - width * percent;
           });
           this.supList_dom.map((item, i) => {
             this.supList_dom[i].marginLeft = 0;
             this.supList_dom[i].top = 3.125;
-            this.supList_dom[i].width = supWidth;
+            this.supList_dom[i].width = wA[this.supList_dom[i].index];
             this.supList_dom[i].left =
-              supWidth * this.supList_dom[i].index - width * percent;
+              wAT[this.supList_dom[i].index] - width * percent;
           });
           this.subList.map((item, i) => {
             this.subList[i].marginLeft = 0;
@@ -626,355 +690,6 @@ export default {
         this.supBodyToAni(val);
         this.pauseScroll = false;
       });
-    },
-    //特别处理周-日的转换
-    specialHandle(type, val) {
-      switch (type) {
-        case "down":
-          {
-            this.currentDepth--;
-            this.indexList.push(val);
-            this.subNextList = this.fetchHeaderData(this.currentDepth - 1);
-            this.subNextList_dom = [];
-            this.subNextList.map((item, i) => {
-              if (!item.hide) {
-                this.subNextList_dom.push(item);
-                this.subNextList_dom[this.subNextList_dom.length - 1].index = i;
-              }
-            });
-            this.needAni = false;
-            let width = this.tableWidth;
-            let subWidth = width / this.subList.length;
-            let nextWidth =
-              width / this.subList.length / this.subNextList.length;
-            this.$nextTick(() => {
-              let subLeftTotal = subWidth * val;
-              this.subNextList_dom.map((item, i) => {
-                this.subNextList_dom[i].top = 6.4;
-                this.subNextList_dom[i].width = nextWidth;
-                this.subNextList_dom[i].left =
-                  subLeftTotal + nextWidth * this.subNextList_dom[i].index;
-              });
-            });
-            setTimeout(() => {
-              this.needAni = true;
-              this.supList.map((item, i) => {
-                this.supList[i].top = -3.125;
-              });
-              this.supList_dom.map((item, i) => {
-                this.supList_dom[i].top = -3.125;
-              });
-              this.subList.map((item, i) => {
-                this.subList[i].top = 0;
-              });
-              this.subList_dom.map((item, i) => {
-                this.subList_dom[i].top = 0;
-              });
-              let wT = 0,
-                wA = [],
-                wAT = [0];
-              this.subNextList.map((item, i) => {
-                this.subNextList[i].top = 3.125;
-                let w = (12 * width) / this.subNextList[i].yearDays;
-                wA[i] = w;
-                if (i > 0) {
-                  wT += wA[i - 1];
-                  wAT[i] = wT;
-                }
-                this.subNextList[i].width = w;
-                this.subNextList[i].marginLeft = 0;
-                this.subNextList[i].left = wT + this.subList[0].left;
-              });
-              this.subNextList_dom.map((item, i) => {
-                this.subNextList_dom[i].top = 3.125;
-                this.subNextList_dom[i].width =
-                  wA[this.subNextList_dom[i].index];
-                this.subNextList_dom[i].marginLeft = 0;
-                this.subNextList_dom[i].left =
-                  wAT[this.subNextList_dom[i].index] + this.subList[0].left;
-              });
-              this.$forceUpdate();
-              setTimeout(
-                () => {
-                  this.rebuildHeader("down");
-                },
-                this.hasAni ? 2000 / this.speed : 0
-              );
-            }, 50);
-            if (this.data.goalTree.length) {
-              for (let i = 0; i < this.data.goalTree.length; i++) {
-                this.subNextListBody[i] = this.fetchBodyData(
-                  this.currentDepth - 1,
-                  i
-                );
-                this.subNextListBody_dom[i] = [];
-                this.subNextListBody[i].map((item, j) => {
-                  if (!item.hide) {
-                    this.subNextListBody_dom[i].push(item);
-                    this.subNextListBody_dom[i][
-                      this.subNextListBody_dom[i].length - 1
-                    ].index = j;
-                  }
-                });
-              }
-              this.needAni = false;
-              let width = this.tableWidth;
-              let subWidth = width / this.subListBody[0].length;
-              let nextWidth =
-                width /
-                this.subListBody[0].length /
-                this.subNextListBody[0].length;
-              this.$nextTick(() => {
-                let subLeftTotal = subWidth * val;
-                for (let j = 0; j < this.data.goalTree.length; j++) {
-                  this.subNextListBody[j].map((item, i) => {
-                    this.subNextListBody[j][i].top = 6.4;
-                    this.subNextListBody[j][i].width = nextWidth;
-                    this.subNextListBody[j][i].left =
-                      subLeftTotal +
-                      nextWidth * this.subNextListBody[j][i].index;
-                  });
-                }
-              });
-              setTimeout(() => {
-                this.needAni = true;
-                for (let j = 0; j < this.data.goalTree.length; j++) {
-                  this.supListBody[j].map((item, i) => {
-                    this.supListBody[j][i].top = -3.125;
-                  });
-                  this.supListBody_dom[j].map((item, i) => {
-                    this.supListBody_dom[j][i].top = -3.125;
-                  });
-                  // Todo 0.0000001 诡异
-                  this.subListBody[j].map((item, i) => {
-                    this.subListBody[j][i].top = 0.0000001;
-                  });
-                  this.subListBody_dom[j].map((item, i) => {
-                    this.subListBody_dom[j][i].top = 0.0000001;
-                  });
-                  let wT = 0,
-                    wA = [],
-                    wAT = [0];
-                  this.subNextListBody[j].map((item, i) => {
-                    this.subNextListBody[j][i].top = 3.125;
-                    let w = (12 * width) / this.subNextListBody[j][i].yearDays;
-
-                    wA[i] = w;
-                    if (i > 0) {
-                      wT += wA[i - 1];
-                      wAT[i] = wT;
-                    }
-                    this.subNextListBody[j][i].width = w;
-                    this.subNextListBody[j][i].marginLeft = 0;
-                    this.subNextListBody[j][i].left = wT + this.subList[0].left;
-                  });
-                  this.subNextListBody_dom[j].map((item, i) => {
-                    this.subNextListBody_dom[j][i].top = 3.125;
-                    this.subNextListBody_dom[j][i].width =
-                      wA[this.subNextListBody_dom[j][i].index];
-                    this.subNextListBody_dom[j][i].marginLeft = 0;
-                    this.subNextListBody_dom[j][i].left =
-                      wAT[this.subNextListBody_dom[j][i].index] +
-                      this.subList[0].left;
-                  });
-                  this.$forceUpdate();
-                }
-                setTimeout(
-                  () => {
-                    this.rebuildBody("down");
-                  },
-                  this.hasAni ? 2000 / this.speed : 0
-                );
-              }, 50);
-            }
-          }
-          break;
-        case "up":
-          {
-            this.currentDepth++;
-            this.needAni = false;
-            let width = this.tableWidth;
-            this.supPrevList = this.fetchHeaderData(this.currentDepth);
-            this.supPrevList.map((item, i) => {
-              this.supPrevList[i].top = -3.124;
-              this.supPrevList[i].width = width * this.supList.length;
-              this.supPrevList[i].left = width * (i - val);
-            });
-            this.supPrevList_dom = [];
-            this.supPrevList.map((item, i) => {
-              if (!item.hide) {
-                this.supPrevList_dom.push(item);
-                this.supPrevList_dom[this.supPrevList_dom.length - 1].index = i;
-              }
-            });
-            this.supPrevList_dom.map((item, i) => {
-              this.supPrevList_dom[i].top = -3.124;
-              this.supPrevList_dom[i].width = width * this.supList.length;
-              this.supPrevList_dom[i].left =
-                width * (this.supPrevList_dom[i].index - val);
-            });
-            let percent = parseInt(
-              (val / this.supList.length) * this.supPrevList.length
-            );
-            setTimeout(() => {
-              if (this.hasAni2) {
-                this.supList_dom = [];
-                this.supList.map((item, i) => {
-                  this.supList[i].hide = false;
-                  this.supList_dom.push(item);
-                  this.supList_dom[this.supList_dom.length - 1].index = i;
-                  this.supList_dom[this.supList_dom.length - 1].hide = false;
-                });
-                this.subList_dom = [];
-                this.subList.map((item, i) => {
-                  this.subList[i].hide = false;
-                  this.subList_dom.push(item);
-                  this.subList_dom[this.subList_dom.length - 1].index = i;
-                  this.subList_dom[this.subList_dom.length - 1].hide = false;
-                });
-              }
-              this.needAni = true;
-              setTimeout(() => {
-                this.supPrevList.map((item, i) => {
-                  this.supPrevList[i].marginLeft = 0;
-                  this.supPrevList[i].top = 0;
-                  this.supPrevList[i].width = width;
-                  this.supPrevList[i].left = width * (i - percent);
-                });
-                this.supPrevList_dom.map((item, i) => {
-                  this.supPrevList_dom[i].marginLeft = 0;
-                  this.supPrevList_dom[i].top = 0;
-                  this.supPrevList_dom[i].width = width;
-                  this.supPrevList_dom[i].left =
-                    width * (this.supPrevList_dom[i].index - percent);
-                });
-                this.supList.map((item, i) => {
-                  this.supList[i].top = 3.125;
-                });
-                this.supList_dom.map((item, i) => {
-                  this.supList_dom[i].top = 3.125;
-                });
-                this.subList.map((item, i) => {
-                  this.subList[i].top = 6.4;
-                });
-                this.subList_dom.map((item, i) => {
-                  this.subList_dom[i].top = 6.4;
-                });
-                setTimeout(
-                  () => {
-                    this.rebuildHeader("up");
-                  },
-                  this.hasAni ? 2000 / this.speed : 0
-                );
-              }, 50);
-              {
-                this.needAni = false;
-                let width = this.tableWidth;
-                for (let j = 0; j < this.data.goalTree.length; j++) {
-                  this.supPrevListBody[j] = this.fetchBodyData(
-                    this.currentDepth,
-                    j
-                  );
-                  this.supPrevListBody[j].map((item, i) => {
-                    this.supPrevListBody[j][i].top = -3.124;
-                    this.supPrevListBody[j][i].width =
-                      width * this.supList.length;
-                    this.supPrevListBody[j][i].left = width * (i - val);
-                  });
-                  this.supPrevListBody_dom[j] = [];
-                  this.supPrevListBody[j].map((item, i) => {
-                    if (!item.hide) {
-                      this.supPrevListBody_dom[j].push(item);
-                      this.supPrevListBody_dom[j][
-                        this.supPrevListBody_dom[j].length - 1
-                      ].index = i;
-                    }
-                  });
-                  this.supPrevListBody_dom[j].map((item, i) => {
-                    this.supPrevListBody_dom[j][i].top = -3.124;
-                    this.supPrevListBody_dom[j][i].width =
-                      width * this.supList.length;
-                    this.supPrevListBody_dom[j][i].left =
-                      width * (this.supPrevListBody_dom[j][i].index - val);
-                  });
-                }
-                setTimeout(() => {
-                  if (this.hasAni2) {
-                    for (let j = 0; j < this.data.goalTree.length; j++) {
-                      this.supListBody_dom[j] = [];
-                      this.supListBody[j].map((item, i) => {
-                        this.supListBody[j][i].hide = false;
-                        this.supListBody_dom[j].push(item);
-                        this.supListBody_dom[j][
-                          this.supListBody_dom[j].length - 1
-                        ].index = i;
-                        this.supListBody_dom[j][
-                          this.supListBody_dom[j].length - 1
-                        ].hide = false;
-                      });
-                      this.subListBody_dom[j] = [];
-                      this.subListBody[j].map((item, i) => {
-                        this.subListBody[j][i].hide = false;
-                        this.subListBody_dom[j].push(item);
-                        this.subListBody_dom[j][
-                          this.subListBody_dom[j].length - 1
-                        ].index = i;
-                        this.subListBody_dom[j][
-                          this.subListBody_dom[j].length - 1
-                        ].hide = false;
-                      });
-                    }
-                  }
-                  this.needAni = true;
-                  setTimeout(() => {
-                    for (let j = 0; j < this.data.goalTree.length; j++) {
-                      let percent = parseInt(
-                        (val / this.supListBody[j].length) *
-                          this.supPrevListBody[j].length
-                      );
-                      this.supPrevListBody[j].map((item, i) => {
-                        this.supPrevListBody[j][i].marginLeft = 0;
-                        this.supPrevListBody[j][i].top = 0;
-                        this.supPrevListBody[j][i].width = width;
-                        this.supPrevListBody[j][i].left = width * (i - percent);
-                      });
-                      this.supPrevListBody_dom[j].map((item, i) => {
-                        this.supPrevListBody_dom[j][i].marginLeft = 0;
-                        this.supPrevListBody_dom[j][i].top = 0;
-                        this.supPrevListBody_dom[j][i].width = width;
-                        this.supPrevListBody_dom[j][i].left =
-                          width *
-                          (this.supPrevListBody_dom[j][i].index - percent);
-                      });
-                      this.supListBody[j].map((item, i) => {
-                        this.supListBody[j][i].top = 3.125;
-                      });
-                      this.supListBody_dom[j].map((item, i) => {
-                        this.supListBody_dom[j][i].top = 3.125;
-                      });
-                      this.subListBody[j].map((item, i) => {
-                        this.subListBody[j][i].top = 6.4;
-                      });
-                      this.subListBody_dom[j].map((item, i) => {
-                        this.subListBody_dom[j][i].top = 6.4;
-                      });
-                    }
-                    this.$forceUpdate();
-                    setTimeout(
-                      () => {
-                        this.rebuildBody("up");
-                      },
-                      this.hasAni ? 2000 / this.speed : 0
-                    );
-                  }, 100);
-                });
-              }
-            });
-          }
-          break;
-        default:
-          break;
-      }
     },
     //重新构建Header结构
     rebuildHeader(type) {
@@ -1188,21 +903,50 @@ export default {
                 tempF = 1,
                 totalDay = isRun ? 366 : 365,
                 tM = 0;
-              tempList.push({
-                text: `第${tempF++}周 ${1 + "号-" + (7 - tempNo) + "号"}`,
-                top: 0,
-                left: 0,
-                width: 0,
-                marginLeft: 0,
-                hide: isFar,
-                current:
-                  nowDate.getFullYear() == tempYear &&
-                  nowDate.getMonth() == tM &&
-                  nowDate.getDate() == 7 - tempNo,
-                yearGroup: tempYear,
-                yearDays: totalDay,
-                daySpan: 7 - tempNo,
-              });
+              if (m === 0 && p === 0) {
+                tempList.push({
+                  text: `第${tempF++}周 ${1 + "号-" + (7 - tempNo) + "号"}`,
+                  top: 0,
+                  left: 0,
+                  width: 0,
+                  marginLeft: 0,
+                  hide: isFar,
+                  current:
+                    nowDate.getFullYear() == tempYear &&
+                    nowDate.getMonth() == tM &&
+                    nowDate.getDate() == 7 - tempNo,
+                  yearGroup: tempYear,
+                  yearDays: totalDay,
+                  daySpan: 7 - tempNo,
+                });
+              } else {
+                if (tempNo !== 0) {
+                  let y = tempList[tempList.length - 1];
+                  tempList[tempList.length - 1] = {
+                    text: `${
+                      y.text.split("周")[0]
+                    }周/${tempYear}年第${tempF++}周 ${
+                      y.text.split("-")[1].split("号")[0] +
+                      "号-" +
+                      (7 - tempNo) +
+                      "号"
+                    }`,
+                    top: 0,
+                    left: 0,
+                    width: 0,
+                    marginLeft: 0,
+                    hide: y.hide,
+                    current:
+                      y.current ||
+                      (nowDate.getFullYear() == tempYear &&
+                        nowDate.getMonth() == tM &&
+                        nowDate.getDate() == 7 - tempNo),
+                    yearGroup: y.yearGroup,
+                    yearDays: y.yearDays,
+                    daySpan: 7,
+                  };
+                }
+              }
               while (tempBase + 7 <= totalDay) {
                 nD = tD + 6;
                 let cFlag = nowDate.getDate() >= tD;
@@ -1278,7 +1022,7 @@ export default {
               let dFlag = cFlag && nowDate.getMonth() == i;
               for (let k = 1; k <= tempArr[i]; k++) {
                 tempList.push({
-                  text: `${k}`,
+                  text: `${tempYear}年${i + 1}月${k}日`,
                   top: 0,
                   left: 0,
                   width: 0,
@@ -1373,12 +1117,29 @@ export default {
                   this.indexList[7 - this.currentDepth] || 0) -
               width * val;
           });
+          let firstWidth = (width * this.subList[0].daySpan) / 7;
+          let lastWidth =
+            (width * this.subList[this.subList.length - 1].daySpan) / 7;
           // Todo 0.0000001 诡异
           this.subListBody[j].map((item, i) => {
             this.subListBody[j][i].top = 0.0000001;
             this.subListBody[j][i].width = width;
             this.subListBody[j][i].marginLeft = 0;
             this.subListBody[j][i].left = width * (i - val) + 0.0000001;
+            if (this.currentDepth === 3) {
+              if (val !== 0)
+                this.subListBody[j][i].marginLeft = width - firstWidth;
+              if (i === 0) {
+                this.subListBody[j][i].width = firstWidth;
+                this.subListBody[j][i].left = width * (i - val) + 0.0000001;
+              } else {
+                this.subListBody[j][i].left =
+                  width * (i - val - 1) + firstWidth + 0.0000001;
+              }
+              if (i === this.subListBody[j].length - 1) {
+                this.subListBody[j][i].width = lastWidth;
+              }
+            }
           });
           this.subListBody_dom[j].map((item, i) => {
             this.subListBody_dom[j][i].top = 0.0000001;
@@ -1386,6 +1147,26 @@ export default {
             this.subListBody_dom[j][i].marginLeft = 0;
             this.subListBody_dom[j][i].left =
               width * (this.subListBody_dom[j][i].index - val) + 0.0000001;
+            if (this.currentDepth === 3) {
+              if (val !== 0)
+                this.subListBody_dom[j][i].marginLeft = width - firstWidth;
+              if (this.subListBody_dom[j][i].index === 0) {
+                this.subListBody_dom[j][i].width = firstWidth;
+                this.subListBody_dom[j][i].left =
+                  width * (this.subListBody_dom[j][i].index - val) + 0.0000001;
+              } else {
+                this.subListBody_dom[j][i].left =
+                  width * (this.subListBody_dom[j][i].index - val - 1) +
+                  firstWidth +
+                  0.0000001;
+              }
+              if (
+                this.subListBody_dom[j][i].index ===
+                this.subListBody[j].length - 1
+              ) {
+                this.subListBody_dom[j][i].width = lastWidth;
+              }
+            }
           });
           let wT = 0,
             wA = [],
@@ -1397,6 +1178,8 @@ export default {
               w =
                 ((12 * width) / this.subNextListBody[j][i].yearDays) *
                 this.subNextListBody[j][i].daySpan;
+            } else if (this.currentDepth === 3) {
+              w = width / 7;
             }
             wA[i] = w;
             if (i > 0) {
@@ -1406,6 +1189,9 @@ export default {
             this.subNextListBody[j][i].width = w;
             this.subNextListBody[j][i].marginLeft = 0;
             this.subNextListBody[j][i].left = wT - width * val;
+            if (this.currentDepth === 3 && val !== 0) {
+              this.subNextListBody[j][i].marginLeft = width - firstWidth;
+            }
           });
           this.subNextListBody_dom[j].map((item, i) => {
             this.subNextListBody_dom[j][i].top = 3.125;
@@ -1414,6 +1200,9 @@ export default {
             this.subNextListBody_dom[j][i].marginLeft = 0;
             this.subNextListBody_dom[j][i].left =
               wAT[this.subNextListBody_dom[j][i].index] - width * val;
+            if (this.currentDepth === 3 && val !== 0) {
+              this.subNextListBody_dom[j][i].marginLeft = width - firstWidth;
+            }
           });
           this.$forceUpdate();
         }
@@ -1492,7 +1281,6 @@ export default {
             let subWidth =
               (width / this.subListBody[j].length) *
               this.supPrevListBody[j].length;
-            let leftTotal = 0;
             this.supPrevListBody[j].map((item, i) => {
               this.supPrevListBody[j][i].marginLeft = 0;
               this.supPrevListBody[j][i].top = 0;
@@ -1506,19 +1294,33 @@ export default {
               this.supPrevListBody_dom[j][i].left =
                 width * (this.supPrevListBody_dom[j][i].index - percent);
             });
+            let wT = 0,
+              wA = [],
+              wAT = [0];
             this.supListBody[j].map((item, i) => {
-              this.supListBody[j][i].marginLeft = 0;
               this.supListBody[j][i].top = 3.125;
-              this.supListBody[j][i].width = supWidth;
-              if (i > 0) leftTotal += supWidth;
-              this.supListBody[j][i].left = leftTotal - width * percent;
+              let w = supWidth;
+              if (this.currentDepth === 4) {
+                w =
+                  ((12 * width) / this.supListBody[j][i].yearDays) *
+                  this.supListBody[j][i].daySpan;
+              }
+              wA[i] = w;
+              if (i > 0) {
+                wT += wA[i - 1];
+                wAT[i] = wT;
+              }
+              this.supListBody[j][i].width = w;
+              this.supListBody[j][i].marginLeft = 0;
+              this.supListBody[j][i].left = wT - width * percent;
             });
             this.supListBody_dom[j].map((item, i) => {
               this.supListBody_dom[j][i].marginLeft = 0;
               this.supListBody_dom[j][i].top = 3.125;
-              this.supListBody_dom[j][i].width = supWidth;
+              this.supListBody_dom[j][i].width =
+                wA[this.supListBody_dom[j][i].index];
               this.supListBody_dom[j][i].left =
-                supWidth * this.supListBody_dom[j][i].index - width * percent;
+                wAT[this.supListBody_dom[j][i].index] - width * percent;
             });
             this.subListBody[j].map((item, i) => {
               this.subListBody[j][i].marginLeft = 0;
@@ -1626,7 +1428,6 @@ export default {
     },
     //初始化Body样式
     initBodyStyle(row, val) {
-      console.log("123");
       this.$nextTick(() => {
         this.needAni = false;
         let width = this.tableWidth;
@@ -1802,20 +1603,40 @@ export default {
                 totalDay = isRun ? 366 : 365,
                 tM = 0;
               let x = tempCnt++;
-              tempList.push({
-                text: this.data.goalTree[row]?.[5]?.[x]?.desc ?? "",
-                finish: this.data.goalTree[row]?.[5]?.[x]?.finish ?? false,
-                bold: this.data.goalTree[row]?.[5]?.[x]?.bold ?? false,
-                showInput: false,
-                top: 0,
-                left: 0,
-                width: 0,
-                marginLeft: 0,
-                hide: isFar,
-                yearGroup: tempYear,
-                yearDays: totalDay,
-                daySpan: 7 - tempNo,
-              });
+              if (m === 0 && p === 0) {
+                tempList.push({
+                  text: this.data.goalTree[row]?.[5]?.[x]?.desc ?? "",
+                  finish: this.data.goalTree[row]?.[5]?.[x]?.finish ?? false,
+                  bold: this.data.goalTree[row]?.[5]?.[x]?.bold ?? false,
+                  showInput: false,
+                  top: 0,
+                  left: 0,
+                  width: 0,
+                  marginLeft: 0,
+                  hide: isFar,
+                  yearGroup: tempYear,
+                  yearDays: totalDay,
+                  daySpan: 7 - tempNo,
+                });
+              } else {
+                if (tempNo !== 0) {
+                  let y = tempList[tempList.length - 1];
+                  tempList[tempList.length - 1] = {
+                    text: y.text,
+                    finish: y.finish,
+                    bold: y.bold,
+                    showInput: false,
+                    top: 0,
+                    left: 0,
+                    width: 0,
+                    marginLeft: 0,
+                    hide: y.hide,
+                    yearGroup: y.yearGroup,
+                    yearDays: y.yearDays,
+                    daySpan: 7,
+                  };
+                }
+              }
               while (tempBase + 7 <= totalDay) {
                 nD = tD + 6;
                 if (nD > tempArr[tM]) {
@@ -1975,9 +1796,6 @@ export default {
     },
     //点击单元格
     clickItem(type, row, val) {
-      // if (!this.canInput) return;
-      // this.canInput = false;
-      // this.$emit("input", false);
       if (type === "up") {
         this.supListBody[row][val].showInput = true;
       } else {
@@ -2015,10 +1833,6 @@ export default {
         );
       }
       this.$emit("save");
-      // setTimeout(() => {
-      //   this.canInput = true;
-      //   this.$emit("input", true);
-      // }, 100);
     },
     //寻找对应行的aspect并更新text
     findAspectAndUpdateText(row, text) {
@@ -2296,7 +2110,6 @@ export default {
     },
     //右键菜单
     onContextmenu(event, row, val, type) {
-      console.log(row, val, type);
       let depth = 8 - this.currentDepth;
       if (type === "down") depth++;
       let item = [];
