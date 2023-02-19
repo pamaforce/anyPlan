@@ -7,7 +7,7 @@ import { Dialog, Button } from "element-ui";
 Vue.use(Dialog);
 Vue.use(Button);
 Vue.use(Contextmenu);
-
+Vue.prototype.$bus = new Vue();
 Vue.config.productionTip = false;
 new Vue({
     render: (h) => h(App),

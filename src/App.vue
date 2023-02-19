@@ -1,27 +1,44 @@
 <template>
   <div id="app" @contextmenu.prevent="onContextmenu">
     <TopBar :state="state" @change="changeState" />
-    <splitpanes class="split-panes" @resize="resize">
-      <pane :size="percent">
-        <AspectTable
-          ref="aspectTable"
-          :data="goalTable"
-          @save="saveData"
-          @scroll="handleLeftScroll"
-          :state="state"
-          :hasAni="ani"
-      /></pane>
-      <pane :size="100 - percent">
-        <MainTable
-          ref="mainTable"
-          :data="goalTable"
-          :hasAni="ani"
-          :hasAni2="ani2"
-          @save="saveData"
-          @scroll="handleRightScroll"
-          @state="handleDepthChange"
-      /></pane>
-    </splitpanes>
+    <div class="main-content">
+      <splitpanes class="split-panes" @resize="resize">
+        <pane :size="percent">
+          <AspectTable
+            ref="aspectTable"
+            :data="goalTable"
+            @save="saveData"
+            @scroll="handleLeftScroll"
+            :state="state"
+            :hasAni="ani"
+        /></pane>
+        <pane :size="100 - percent">
+          <MainTable
+            ref="mainTable"
+            :data="goalTable"
+            :hasAni="ani"
+            :hasAni2="ani2"
+            :showHours="showHours"
+            @save="saveData"
+            @scroll="handleRightScroll"
+            @state="handleDepthChange"
+            @showHours="handleShowHours"
+            @dragTaskStart="dragTaskStart"
+        /></pane>
+      </splitpanes>
+      <HoursPanel
+        ref="hoursPanel"
+        :day="tempDay"
+        :data="tempInfo"
+        :show="showHours"
+        @hide="handleHideHours"
+        :dragTaskInfo="dragTaskInfo"
+        :isDragBlockMove="isDragBlockMove"
+        :dragOverConfig="dragOverConfig"
+        @moveAreaChange="moveAreaChange"
+        @changeTaskInfo="changeTaskInfo"
+      />
+    </div>
     <BottomBar
       @clear="clearData"
       @switchAni="switchAni"
@@ -36,26 +53,57 @@ import { Splitpanes, Pane } from "splitpanes";
 import { Notification } from "element-ui";
 import AspectTable from "./components/AspectTable.vue";
 import MainTable from "./components/MainTable.vue";
+import HoursPanel from "./components/HoursPanel.vue";
 import BottomBar from "./components/BottomBar.vue";
 import TopBar from "./components/TopBar.vue";
+import { dragTaskMixin } from "@/utils/dragTaskMixin";
 export default {
   name: "App",
-  components: { Splitpanes, Pane, MainTable, BottomBar, TopBar, AspectTable },
+  mixins: [dragTaskMixin],
+  components: {
+    Splitpanes,
+    Pane,
+    MainTable,
+    BottomBar,
+    TopBar,
+    AspectTable,
+    HoursPanel,
+  },
   data() {
     return {
       storageKey: "anyPlanUserData_1",
       state: 0,
       percent: 100,
       goalTable: {
+        initialTimeStamp: 536428800000,
         state: 0,
         aspect: [],
         goalTree: [],
+        hoursInfo: {},
       },
+      showHours: false,
       ani: true,
       ani2: false,
+      tempDay: 0,
+      tempInfo: {},
     };
   },
   methods: {
+    handleHideHours() {
+      this.showHours = false;
+    },
+    handleShowHours(e) {
+      this.tempDay = e;
+      if (!this.$bus.goalTable.hoursInfo[e]) {
+        this.$bus.goalTable.hoursInfo[e] = {
+          hoursSpan: [7, 24],
+          columns: [[], [], []],
+        };
+      }
+      this.tempInfo = { ...this.$bus.goalTable.hoursInfo[e] };
+      console.log(this.tempInfo);
+      this.showHours = true;
+    },
     resize() {
       this.$refs.mainTable.updateTableWidth();
     },
@@ -63,17 +111,27 @@ export default {
       this.goalTable = JSON.parse(
         window.localStorage.getItem(this.storageKey) ||
           JSON.stringify({
+            initialTimeStamp: 536428800000,
             state: 0,
             aspect: [],
             goalTree: [],
+            hoursInfo: [],
           })
       );
+      this.$bus.goalTable = this.goalTable;
+      this.$bus.$on("save", () => {
+        console.log("已保存");
+        window.localStorage.setItem(
+          this.storageKey,
+          JSON.stringify(this.$bus.goalTable)
+        );
+      });
       this.state = this.goalTable.state;
-      console.log(this.goalTable);
       if (this.state > 5) this.state = 5;
       this.changeState(this.state);
     },
     saveData(val, needTableUpdate = true) {
+      this.$bus.goalTable = this.goalTable;
       window.localStorage.setItem(
         this.storageKey,
         JSON.stringify({ ...this.goalTable, state: this.state })
@@ -85,7 +143,13 @@ export default {
       }
     },
     clearData() {
-      this.goalTable = { state: 0, aspect: [], goalTree: [] };
+      this.goalTable = {
+        initialTimeStamp: 536428800000,
+        state: 0,
+        aspect: [],
+        goalTree: [],
+        hoursInfo: [],
+      };
       this.state = 0;
       this.saveData();
     },
@@ -283,7 +347,7 @@ export default {
       this.state = 13 - val;
     },
   },
-  mounted() {
+  created() {
     this.getData();
   },
 };
@@ -291,6 +355,10 @@ export default {
 
 <style scoped>
 .split-panes {
+  position: relative;
+  height: 100%;
+}
+.main-content {
   position: relative;
   height: calc(100vh - 90px);
 }

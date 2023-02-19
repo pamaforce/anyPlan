@@ -209,6 +209,7 @@
             <input
               v-else
               v-model="item.text"
+              :id="'input_up_' + j + '_' + item.index"
               @blur="blurItem('up', j, item.index)"
               @keyup.enter="blurItem('up', j, item.index)"
             />
@@ -216,6 +217,7 @@
         </template>
         <template v-for="(item, i) in subListBody_dom[j]">
           <div
+            @mousedown.prevent="(e) => dragTaskStart(e, j, item.index)"
             v-if="!item.hide"
             :class="[
               'body-sub-cell',
@@ -241,13 +243,20 @@
           >
             <p
               v-if="!item.showInput"
-              :class="[{ finish: item.finish, bold: item.bold }]"
+              :class="[
+                {
+                  finish: item.finish,
+                  bold: item.bold,
+                  assigned: item.isAssigned,
+                },
+              ]"
             >
               {{ item.text }}
             </p>
             <input
               v-else
               v-model="item.text"
+              :id="'input_down_' + j + '_' + item.index"
               @blur="blurItem('down', j, item.index)"
               @keyup.enter="blurItem('down', j, item.index)"
             />
@@ -270,6 +279,10 @@ export default {
         goalTree: [],
       }),
     },
+    showHours: {
+      type: Boolean,
+      default: () => false,
+    },
     hasAni: {
       type: Boolean,
       default: () => true,
@@ -283,8 +296,6 @@ export default {
     //初始深度
     currentDepth: 8,
     tableWidth: 120,
-    //出生日期时间戳
-    initialTimeStamp: 539452800000,
     supList: [],
     supPrevList: [],
     subList: [],
@@ -315,6 +326,9 @@ export default {
     speed: 1,
   }),
   methods: {
+    dragTaskStart(event, row, val) {
+      if (this.showHours) this.$emit("dragTaskStart", event, row, val);
+    },
     //处理Body横向滚动
     handleScrollX() {
       if (this.pauseScroll) return;
@@ -1796,23 +1810,28 @@ export default {
     },
     //点击单元格
     clickItem(type, row, val) {
-      if (type === "up") {
-        this.supListBody[row][val].showInput = true;
-      } else {
-        this.subListBody[row][val].showInput = true;
-      }
-      this.$forceUpdate();
-      this.$nextTick(() => {
-        let input = document.querySelector("input");
-        if (!input) return;
-        let offset =
-          input.getBoundingClientRect().x +
-          input.getBoundingClientRect().width -
-          document.body.clientWidth;
-        if (offset > 5) {
-          this.$refs.tableBody.scrollLeft += offset;
+      setTimeout(() => {
+        if (type === "up") {
+          this.supListBody[row][val].showInput = true;
+        } else {
+          this.subListBody[row][val].showInput = true;
         }
-        document.querySelector("input").select();
+        this.$forceUpdate();
+        this.$nextTick(() => {
+          let input = document.getElementById(
+            "input_" + type + "_" + row + "_" + val
+          );
+          if (!input) return;
+          let offset =
+            input.getBoundingClientRect().x +
+            input.getBoundingClientRect().width -
+            document.body.clientWidth;
+          if (offset > 5) {
+            this.$refs.tableBody.scrollLeft += offset;
+          }
+          input.select();
+          input.focus();
+        });
       });
     },
     //输入框失焦
@@ -2199,6 +2218,14 @@ export default {
             },
           });
         }
+        if (this.currentDepth === 3) {
+          item.push({
+            label: "Hours",
+            onClick: () => {
+              this.$emit("showHours", val);
+            },
+          });
+        }
       }
       this.$contextmenu({
         items: item,
@@ -2215,7 +2242,7 @@ export default {
     },
   },
   created() {
-    this.birth = new Date(this.initialTimeStamp);
+    this.birth = new Date(this.$bus.goalTable.initialTimeStamp);
     this.birthYear = this.birth.getFullYear();
     setTimeout(() => {
       this.$nextTick(() => {
@@ -2422,6 +2449,9 @@ export default {
   color: rgb(170, 170, 170);
   text-decoration: line-through;
   font-weight: bold;
+}
+.assigned {
+  color: green;
 }
 .ani,
 .ani1 {

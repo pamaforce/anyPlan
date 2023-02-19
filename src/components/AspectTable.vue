@@ -511,10 +511,6 @@ export default {
       this.$emit("save", true);
     },
     clickItem(type, row, val, subVal = 0, isDown = false) {
-      // if (!this.canInput) return;
-      // this.canInput = false;
-      // this.$emit("input", false);
-      console.log(isDown);
       switch (type) {
         case 0:
           if (isDown) this.data.aspect[row].goal.showInput = true;
@@ -591,10 +587,6 @@ export default {
         }
       }
       this.$emit("save", true);
-      // setTimeout(() => {
-      //   this.canInput = true;
-      //   this.$emit("input", true);
-      // }, 100);
     },
     onContextmenu(event, ...info) {
       let item = [];
