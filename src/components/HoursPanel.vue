@@ -818,7 +818,6 @@ export default {
       // this.limitUnitSize();
       this.unitSize = this.totalHeight / (this.clocks[1] - this.clocks[0]);
       this.limitSize = (this.unitSize * 30) / 60;
-      window.location.href = "#clock_7";
       // 拖拽线恢复
       if (this.isHourShow) {
         this.toReSetSplit();
