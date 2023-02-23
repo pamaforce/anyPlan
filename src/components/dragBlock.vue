@@ -1,8 +1,11 @@
 <template>
   <div
     class="drag-block"
-    :ref="'drag_block_' + dragInfo.id"
-    :style="{ height: dragInfo.height + 'px', top: dragInfo.top + 'px' }"
+    :ref="'drag_block_' + dragInfo.id + '_' + dragInfo.index"
+    :style="{
+      height: dragInfo.height + 'px',
+      top: dragInfo.top + 'px',
+    }"
     @mousedown.stop="blockMouseDown"
     @contextmenu.prevent.stop="dragBlockRightClick"
     :class="{
@@ -11,7 +14,7 @@
   >
     <input
       v-if="showInput"
-      :ref="'drag_input_' + dragInfo.id"
+      :ref="'drag_input_' + dragInfo.id + '_' + dragInfo.index"
       class="drag-input"
       type="text"
       v-model="dragInfo.text"
@@ -114,7 +117,7 @@ export default {
       this.isMove = true;
       this.originDragConfig = JSON.parse(JSON.stringify(this.dragInfo));
       this.$parent.level3MoveTab = this.dragInfo;
-      this.$emit("activeChange", this.dragInfo.id);
+      this.$emit("activeChange", this.dragInfo.id, this.dragInfo.index);
       // 父元素：当前栏，祖父元素：三栏+刻度栏
       this.parentDom = event.target.parentNode.parentNode;
       this.parentDom.addEventListener(
@@ -127,7 +130,10 @@ export default {
       if (this.isMove) {
         this.isShowTime = true;
         if (this.lastEventInfo.clientY || this.lastEventInfo.clientY === 0) {
-          let dargDom = this.$refs["drag_block_" + this.dragInfo.id];
+          let dargDom =
+            this.$refs[
+              "drag_block_" + this.dragInfo.id + "_" + this.dragInfo.index
+            ];
           if (dargDom) {
             let heightDiff = this.lastEventInfo.clientY - event.clientY;
             this.dragInfo.top = this.dragInfo.top - heightDiff;
@@ -164,7 +170,6 @@ export default {
         this.parentMouseMoveForBlock
       );
       this.parentDom.removeEventListener("mouseup", this.parentMouseUpForBlock);
-      this.$parent.saveConfig();
     },
     lineMousedown(type, event) {
       if (!this.parentDom) {
@@ -177,15 +182,28 @@ export default {
     },
     parentMouseMoveForLine(event) {
       if (this.lastEventInfo.clientY || this.lastEventInfo.clientY === 0) {
-        let dargDom = this.$refs["drag_block_" + this.dragInfo.id];
+        let basePx = parseFloat(
+          document.getElementsByTagName("html")[0].style.fontSize.split("px")[0]
+        );
+        let dargDom =
+          this.$refs[
+            "drag_block_" + this.dragInfo.id + "_" + this.dragInfo.index
+          ];
         if (this.resizeType === "bottom") {
-          let newHeight = event.clientY - this.topHeight - this.dragInfo.top;
+          let newHeight =
+            event.clientY -
+            (this.topHeight * 16) / basePx -
+            this.dragInfo.top -
+            (this.$parent.unitSize / 32) * basePx;
           if (newHeight < this.limitSize) newHeight = this.limitSize;
           this.dragInfo.height = newHeight;
           dargDom.style.height = this.dragInfo.height + "px";
         }
         if (this.resizeType === "top") {
-          let newTop = event.clientY - this.topHeight;
+          let newTop =
+            event.clientY -
+            (this.topHeight * 16) / basePx -
+            (this.$parent.unitSize / 32) * basePx;
           let topDiff = newTop - this.dragInfo.top;
           let newHeight = this.dragInfo.height - topDiff;
           if (newHeight < this.limitSize) {
@@ -223,7 +241,6 @@ export default {
       );
       this.parentDom.removeEventListener("mouseup", this.parentMouseUpForLine);
       this.isShowTime = false;
-      this.$parent.saveConfig();
     },
     blockDbClick() {
       this.showInput = true;
@@ -232,7 +249,9 @@ export default {
         this.parentClickForInput
       );
       this.$nextTick(() => {
-        this.$refs["drag_input_" + this.dragInfo.id].select();
+        this.$refs[
+          "drag_input_" + this.dragInfo.id + "_" + this.dragInfo.index
+        ].select();
       });
     },
     parentClickForInput() {
@@ -241,7 +260,6 @@ export default {
         "click",
         this.parentClickForInput
       );
-      this.$parent.saveConfig();
     },
     getCurMoveConfig() {
       this.curMoveConfig.startTime = this.dragInfo.startTime;
@@ -289,7 +307,8 @@ export default {
   width: 100%;
   top: 0px;
   left: 0px;
-  z-index: 1500;
+  z-index: 150;
+  box-sizing: border-box;
 }
 .line {
   width: 5px;

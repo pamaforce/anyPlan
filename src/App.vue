@@ -101,7 +101,6 @@ export default {
         };
       }
       this.tempInfo = { ...this.$bus.goalTable.hoursInfo[e] };
-      console.log(this.tempInfo);
       this.showHours = true;
     },
     resize() {
@@ -115,9 +114,10 @@ export default {
             state: 0,
             aspect: [],
             goalTree: [],
-            hoursInfo: [],
+            hoursInfo: {},
           })
       );
+      console.log(this.goalTable);
       this.$bus.goalTable = this.goalTable;
       this.$bus.$on("save", () => {
         console.log("已保存");
@@ -148,7 +148,7 @@ export default {
         state: 0,
         aspect: [],
         goalTree: [],
-        hoursInfo: [],
+        hoursInfo: {},
       };
       this.state = 0;
       this.saveData();

@@ -911,7 +911,6 @@ export default {
   font-size: 16px;
 }
 .aspect-level-0 {
-  min-height: 100px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -923,6 +922,7 @@ export default {
   transition: all 1s ease-in;
 }
 .wrapper_1 {
+  min-height: 99px;
   width: 200%;
   display: flex;
   flex-direction: column;
@@ -953,8 +953,8 @@ export default {
   border-bottom: 1px solid #555;
 }
 .aspect-level-1 {
-  height: 100%;
   min-height: 99px;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;

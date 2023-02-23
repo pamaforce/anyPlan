@@ -15,7 +15,7 @@
         <a @click="closeHours">关闭</a>
       </div>
     </div>
-    <div class="plan-panel-canvas">
+    <div class="plan-panel-canvas" ref="canvas">
       <div
         class="plan-panel"
         :class="{ 'stop-pointer-events': isDragBlockMove || canSplitMove }"
@@ -45,9 +45,9 @@
           <template v-for="(tab, index) in level1Tabs">
             <DragBlock
               :dragInfo="tab"
-              :key="tab.id"
+              :key="tab.id + '_' + tab.index"
               :index="index"
-              :isActive="tab.id === activeId"
+              :isActive="tab.id === activeId && tab.index === activeIndex"
               :limitSize="limitSize"
               @activeChange="activeChange"
               @stopClearActive="stopClearActive"
@@ -65,9 +65,9 @@
           <template v-for="(tab, index) in level2Tabs">
             <DragBlock
               :dragInfo="tab"
-              :key="tab.id"
+              :key="tab.id + '_' + tab.index"
               :index="index"
-              :isActive="tab.id === activeId"
+              :isActive="tab.id === activeId && tab.index === activeIndex"
               :limitSize="limitSize"
               @activeChange="activeChange"
               @stopClearActive="stopClearActive"
@@ -87,9 +87,9 @@
           <template v-for="(tab, index) in level3Tabs">
             <DragBlock
               :dragInfo="tab"
-              :key="tab.id"
+              :key="tab.id + '_' + tab.index"
               :index="index"
-              :isActive="tab.id === activeId"
+              :isActive="tab.id === activeId && tab.index === activeIndex"
               :limitSize="limitSize"
               @activeChange="activeChange"
               @stopClearActive="stopClearActive"
@@ -190,15 +190,6 @@ import { Notification } from "element-ui";
 export default {
   name: "HoursPanel",
   props: {
-    hourInfo: {
-      type: Object,
-      default: () => {
-        let now = new Date();
-        return {
-          title: `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`,
-        };
-      },
-    },
     show: {
       type: Boolean,
       default: () => false,
@@ -241,7 +232,7 @@ export default {
       title: "",
       totalHeight: 600, // 时间全域高度
       topHeight: 40, // 窗口距离画布的高度
-      unitSize: 30, // 实际最小刻度
+      unitSize: 50, // 实际最小刻度
       limitSize: 30, // 最小时间限制
       clocks: [7, 24], // 时间全域
 
@@ -268,6 +259,7 @@ export default {
       setEndHour: "",
 
       activeId: "",
+      activeIndex: "",
       isClearActive: true,
 
       rightClickTab: {},
@@ -297,7 +289,6 @@ export default {
       }
     },
     data() {
-      console.log(this.data);
       this.level1Tabs = this.data.columns[0];
       this.level2Tabs = this.data.columns[1];
       this.level3Tabs = this.data.columns[2];
@@ -312,48 +303,6 @@ export default {
         this.changeUnitSize();
       },
       immediate: true,
-    },
-    hourInfo: {
-      handler() {
-        if (this.hourInfo.title) {
-          let dayList = this.hourInfo.title.split("-");
-          let saveObj = localStorage.getItem("daysInfo");
-          if (saveObj) {
-            saveObj = JSON.parse(saveObj);
-            if (
-              saveObj[dayList[0]] &&
-              saveObj[dayList[0]][dayList[1]] &&
-              saveObj[dayList[0]][dayList[1]][dayList[2]]
-            ) {
-              let newObj = saveObj[dayList[0]][dayList[1]][dayList[2]];
-              this.clocks = newObj.timeRange;
-              this.level1Tabs = newObj.level1Tabs;
-              this.level2Tabs = newObj.level2Tabs;
-              this.level3Tabs = newObj.level3Tabs;
-              this.level1Tabs = JSON.parse(JSON.stringify(this.level1Tabs));
-              this.level2Tabs = JSON.parse(JSON.stringify(this.level2Tabs));
-              this.level3Tabs = JSON.parse(JSON.stringify(this.level3Tabs));
-            } else {
-              this.clocks = [7, 24];
-              this.level1Tabs = [];
-              this.level2Tabs = [];
-              this.level3Tabs = [];
-            }
-          }
-          this.toReSetSplit();
-          this.panelIsToday();
-          if (this.isCurDay) {
-            this.$nextTick(() => {
-              this.setCurTimeLine();
-            });
-            setInterval(() => {
-              this.setCurTimeLine();
-            }, 60000);
-          }
-        }
-      },
-      immediate: true,
-      deep: true,
     },
   },
   mounted() {
@@ -372,7 +321,6 @@ export default {
     setHours() {
       let startTime = +this.$refs.hours_start.value;
       let endTime = +this.$refs.hours_end.value;
-      console.log(startTime, endTime);
       if (startTime < endTime) {
         this.lastClocks = JSON.parse(JSON.stringify(this.clocks));
         this.clocks[0] = startTime < 0 ? 0 : startTime;
@@ -386,17 +334,6 @@ export default {
           this.clocks[1],
         ];
         this.$bus.$emit("save");
-        this.saveConfig();
-      }
-    },
-    panelIsToday() {
-      this.isCurDay = false;
-      let nowTime = new Date();
-      let y = nowTime.getFullYear();
-      let m = nowTime.getMonth() + 1;
-      let d = nowTime.getDate();
-      if (`${y}-${m}-${d}` === this.hourInfo.title) {
-        this.isCurDay = true;
       }
     },
     setCurTimeLine() {
@@ -417,64 +354,7 @@ export default {
           (this.totalHeight * newHours) / (this.clocks[1] - this.clocks[0]) +
           "px";
     },
-    // 子组件有用到
-    saveConfig() {
-      let dayList = this.hourInfo.title.split("-");
-      // let level1Tabs = this.trasformSaveTabs(this.level1Tabs)
-      // let level2Tabs = this.trasformSaveTabs(this.level2Tabs)
-      // let level3Tabs = this.trasformSaveTabs(this.level3Tabs)
-      let saveObj = localStorage.getItem("daysInfo");
-      let obj = {
-        timeRange: this.clocks,
-        level1Tabs: this.level1Tabs,
-        level2Tabs: this.level2Tabs,
-        level3Tabs: this.level3Tabs,
-      };
-      if (saveObj) {
-        saveObj = JSON.parse(saveObj);
-        if (
-          saveObj[dayList[0]] &&
-          saveObj[dayList[0]][dayList[1]] &&
-          saveObj[dayList[0]][dayList[1]][dayList[2]]
-        ) {
-          saveObj[dayList[0]][dayList[1]][dayList[2]] = obj;
-        } else if (saveObj[dayList[0]] && saveObj[dayList[0]][dayList[1]]) {
-          saveObj[dayList[0]][dayList[1]][dayList[2]] = obj;
-        } else if (saveObj[dayList[0]]) {
-          saveObj[dayList[0]][dayList[1]][dayList[2]] = obj;
-        }
-        localStorage.setItem("daysInfo", JSON.stringify(saveObj));
-      } else {
-        let obj = {
-          [dayList[0]]: {
-            [dayList[1]]: {
-              [dayList[2]]: {
-                timeRange: this.clocks,
-                level1Tabs: this.level1Tabs,
-                level2Tabs: this.level2Tabs,
-                level3Tabs: this.level3Tabs,
-              },
-            },
-          },
-        };
-        localStorage.setItem("daysInfo", JSON.stringify(obj));
-      }
-    },
-    // 保存干净的参数（有用, 但时间=>top,height转换还没做）
-    // trasformSaveTabs (tabs) {
-    //   let newTabs = []
-    //   let saveKey = ['id', 'text', 'startTime', 'endTime']
-    //   tabs.forEach(item => {
-    //     let newTab = {}
-    //     saveKey.forEach(key => {
-    //       newTab[key] = item[key]
-    //     })
-    //     newTabs.push(newTab)
-    //   })
-    //   return newTabs
-    // },
     closeHours() {
-      console.log(this.level1Tabs, this.level2Tabs, this.level3Tabs);
       this.$emit("hide");
     },
     dragOver(event, type) {
@@ -500,12 +380,11 @@ export default {
           let rightLimt = (456 / 16) * basePx; // 500 + 56 - 50 * 2
           if (split1Left < leftLimt) split1Left = leftLimt;
           if (split1Left > rightLimt) split1Left = rightLimt;
-          splitDom1.style.left = split1Left - (2 / 16) * basePx + "px";
+          splitDom1.style.left = split1Left + "px";
           level1Dom.style.width = split1Left - (56 / 16) * basePx + "px";
           level2Dom.style.width =
             (556 / 16) * basePx - split1Left - level3Width + "px"; // 500 - (split1Left - 56) - level3Width
-          splitDom2.style.left =
-            (556 / 16) * basePx - level3Width - (2 / 16) * basePx + "px"; // 500 + 56 - level3Width
+          splitDom2.style.left = (556 / 16) * basePx - level3Width + "px"; // 500 + 56 - level3Width
         }
         if (this.aplitLineOrder === 2) {
           let split1Left = event.offsetX;
@@ -513,9 +392,8 @@ export default {
           let rightLimt = (506 / 16) * basePx; // 500 + 56 - 50
           if (split1Left < leftLimt) split1Left = leftLimt;
           if (split1Left > rightLimt) split1Left = rightLimt;
-          splitDom2.style.left = split1Left - (2 / 16) * basePx + "px";
-          let newLevel2Width =
-            split1Left - (56 / 16) * basePx - level1Width - (4 / 16) * basePx;
+          splitDom2.style.left = split1Left + "px";
+          let newLevel2Width = split1Left - (56 / 16) * basePx - level1Width;
           newLevel2Width =
             newLevel2Width < (50 / 16) * basePx
               ? (50 / 16) * basePx
@@ -527,8 +405,7 @@ export default {
           }
           level1Width =
             this.$refs.task_panel_level1.getBoundingClientRect().width;
-          splitDom1.style.left =
-            level1Width + (56 / 16) * basePx - (2 / 16) * basePx + "px";
+          splitDom1.style.left = level1Width + (56 / 16) * basePx + "px";
         }
       } else {
         let width = 0;
@@ -538,6 +415,7 @@ export default {
           width = this.$refs.task_panel_level1.getBoundingClientRect().width;
           leftLimit1 =
             this.$refs.task_panel_level1.getBoundingClientRect().left;
+          timeLeft = -(56 / 16) * basePx;
         }
         if (this.dragTaskInfo.taskLevel === "level2") {
           width = this.$refs.task_panel_level2.getBoundingClientRect().width;
@@ -551,14 +429,15 @@ export default {
           event.clientY -
           (this.topHeight / 16) * basePx -
           (50 / 16) * basePx -
-          (this.unitSize / 32) * basePx;
+          (this.unitSize / 32) * basePx +
+          this.$refs.canvas.scrollTop;
         let toDaysConfig = {
           type,
           top,
           width,
           leftLimit1,
           timeLeft,
-          height: this.unitSize,
+          height: (this.unitSize / 16) * basePx,
           event,
         };
         let containerHeight =
@@ -570,15 +449,6 @@ export default {
     dragEnd(event) {
       this.canSplitMove = false;
       this.$emit("moveAreaChange", { type: "hidden" });
-      if (this.dragTaskInfo.taskDay !== this.day) {
-        Notification.warning({
-          title: "注意",
-          message: "无法安排非当前日期任务！",
-          showClose: false,
-          duration: 2500,
-        });
-        return;
-      }
       let basePx = parseFloat(
         document.getElementsByTagName("html")[0].style.fontSize.split("px")[0]
       );
@@ -592,8 +462,9 @@ export default {
       }
       let tab = {
         id: this.dragTaskInfo.taskId,
+        index: this.dragTaskInfo.taskDay,
         text: this.dragTaskInfo.text,
-        height: this.unitSize,
+        height: (this.unitSize / 16) * basePx,
         top: top,
         hasDone: false,
         type: this.dragTaskInfo.taskLevel,
@@ -608,20 +479,21 @@ export default {
         this.limitOverlap(this[tabListKey], tab) === true
       ) {
         this[tabListKey].push(tab);
+        this[tabListKey] = JSON.parse(JSON.stringify(this[tabListKey]));
         let changeTaskInfo = {
           detail: this.dragTaskInfo,
           type: "addPlan",
           hasDone: true,
         };
         this.$emit("changeTaskInfo", changeTaskInfo);
-        this.saveConfig();
       }
     },
     changeTaskInfo(e) {
       this.$emit("changeTaskInfo", e);
     },
-    activeChange(activeId) {
+    activeChange(activeId, activeIndex) {
       this.activeId = activeId;
+      this.activeIndex = activeIndex;
     },
     stopClearActive() {
       this.isClearActive = false;
@@ -669,7 +541,6 @@ export default {
         hasDone: this.rightClickTab.hasDone,
       };
       this.$emit("changeTaskInfo", changeTaskInfo);
-      this.saveConfig();
     },
     delTask() {
       this[this.rightClickTab.type + "Tabs"].splice(this.rightClickIndex, 1);
@@ -678,7 +549,6 @@ export default {
         type: "cancelPlan",
       };
       this.$emit("changeTaskInfo", changeTaskInfo);
-      this.saveConfig();
     },
     splitMouseDown(event, lineOrder) {
       event.stopPropagation();
@@ -698,7 +568,15 @@ export default {
           this.showLevel3MoveDiv = true;
           this.$nextTick(() => {
             if (this.$refs.level_3_move_container) {
-              let top = event.clientY - this.topHeight - this.limitSize / 2;
+              let basePx = parseFloat(
+                document
+                  .getElementsByTagName("html")[0]
+                  .style.fontSize.split("px")[0]
+              );
+              let top =
+                event.clientY -
+                (this.topHeight * 16) / basePx -
+                this.limitSize / 2;
               this.$refs.level_3_move_container.style.height =
                 this.limitSize + "px";
               this.$refs.level_3_move_container.style.top = top + "px";
@@ -721,7 +599,11 @@ export default {
     },
     level3MouseMove(event) {
       if (this.$refs.level_3_move_container) {
-        let top = event.clientY - this.topHeight - this.limitSize / 2;
+        let basePx = parseFloat(
+          document.getElementsByTagName("html")[0].style.fontSize.split("px")[0]
+        );
+        let top =
+          event.clientY - (this.topHeight * 16) / basePx - this.limitSize / 2;
         this.$refs.level_3_move_container.style.height = this.limitSize + "px";
         this.$refs.level_3_move_container.style.top = top + "px";
         this.curMoveData.top = top;
@@ -733,7 +615,11 @@ export default {
       }
     },
     level3MouseUp(event) {
-      let top = event.clientY - this.topHeight - this.limitSize / 2;
+      let basePx = parseFloat(
+        document.getElementsByTagName("html")[0].style.fontSize.split("px")[0]
+      );
+      let top =
+        event.clientY - (this.topHeight * 16) / basePx - this.limitSize / 2;
       let tab = {
         id: Math.random().toFixed(6),
         text: "新建任务",
@@ -812,29 +698,17 @@ export default {
       this.totalHeight = document.documentElement.clientHeight - 8.125 * basePx;
       if (this.clocks[0] < 7 && this.clocks[1] === 24) {
         let unitSize = this.totalHeight / (24 - 7);
-        this.totalHeight = unitSize * (this.clocks[1] - this.clocks[0]);
+        this.totalHeight =
+          (unitSize / 16) * basePx * (this.clocks[1] - this.clocks[0]);
       }
       // 最小刻度处理
       // this.limitUnitSize();
-      this.unitSize = this.totalHeight / (this.clocks[1] - this.clocks[0]);
-      this.limitSize = (this.unitSize * 30) / 60;
+      this.unitSize =
+        ((this.totalHeight / (this.clocks[1] - this.clocks[0])) * 16) / basePx;
+      this.limitSize = ((this.unitSize / 16) * basePx * 30) / 60;
       // 拖拽线恢复
       if (this.isHourShow) {
         this.toReSetSplit();
-      }
-
-      // 任务块起始
-      let startHoursDiff = this.lastClocks[0] - this.clocks[0];
-      if (!isNaN(startHoursDiff) && startHoursDiff != 0) {
-        this.level1Tabs.forEach((item) => {
-          item.top = item.top + startHoursDiff * this.unitSize;
-        });
-        this.level2Tabs.forEach((item) => {
-          item.top = item.top + startHoursDiff * this.unitSize;
-        });
-        this.level3Tabs.forEach((item) => {
-          item.top = item.top + startHoursDiff * this.unitSize;
-        });
       }
     },
     // limitUnitSize() {
@@ -1011,7 +885,7 @@ export default {
 .split-line-container {
   width: 5px;
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   background: rgba(0, 0, 0, 0);
   position: absolute;
   top: 40px;

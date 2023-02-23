@@ -233,6 +233,7 @@
             "
             :key="'subBody' + j + i"
             :ref="'subCellBody' + j"
+            :id="'subBody_' + j + '_' + item.index"
             :title="item.text"
             @click="clickItem('down', j, item.index)"
             @contextmenu.prevent.stop="
@@ -269,6 +270,7 @@
 </template>
 
 <script>
+import { Notification } from "element-ui";
 export default {
   name: "MainTable",
   props: {
@@ -1025,7 +1027,7 @@ export default {
           for (let j = 0; j < 100; j++) {
             tempYear = this.birthYear + j;
             curYear = (this.indexList[5] * 7) / 365 - j;
-            isFar = curYear < -1 || curYear > 1;
+            isFar = curYear < -0.25 || curYear > 0.5;
             let isRun =
                 (tempYear % 4 === 0 && tempYear % 100 !== 0) ||
                 tempYear % 400 === 0,
@@ -1714,7 +1716,7 @@ export default {
           for (let j = 0; j < 100; j++) {
             tempYear = this.birthYear + j;
             curYear = (this.indexList[5] * 7) / 365 - j;
-            isFar = curYear < -1 || curYear > 1;
+            isFar = curYear < -0.25 || curYear > 0.5;
             let isRun =
                 (tempYear % 4 === 0 && tempYear % 100 !== 0) ||
                 tempYear % 400 === 0,
@@ -1727,6 +1729,8 @@ export default {
                   text: this.data.goalTree[row]?.[6]?.[x]?.desc ?? "",
                   finish: this.data.goalTree[row]?.[6]?.[x]?.finish ?? false,
                   bold: this.data.goalTree[row]?.[6]?.[x]?.bold ?? false,
+                  isAssigned:
+                    this.data.goalTree[row]?.[6]?.[x]?.isAssigned ?? false,
                   showInput: false,
                   top: 0,
                   left: 0,
@@ -1814,6 +1818,18 @@ export default {
         if (type === "up") {
           this.supListBody[row][val].showInput = true;
         } else {
+          if (
+            this.currentDepth === 3 &&
+            this.data.goalTree[row]?.[6]?.[val]?.isAssigned
+          ) {
+            Notification.warning({
+              title: "注意",
+              message: "该任务已经被安排",
+              showClose: false,
+              duration: 2500,
+            });
+            return;
+          }
           this.subListBody[row][val].showInput = true;
         }
         this.$forceUpdate();
@@ -2193,6 +2209,18 @@ export default {
           item.push({
             label: "完成",
             onClick: () => {
+              if (
+                depth === 6 &&
+                this.data.goalTree[row][depth][val].isAssigned
+              ) {
+                Notification.warning({
+                  title: "注意",
+                  message: "该任务已经被安排",
+                  showClose: false,
+                  duration: 2500,
+                });
+                return;
+              }
               this.subListBody[row][val].finish = true;
               this.data.goalTree[row][depth][val].finish = true;
               this.$emit("save");
@@ -2203,6 +2231,18 @@ export default {
           item.push({
             label: "取消重点",
             onClick: () => {
+              if (
+                depth === 6 &&
+                this.data.goalTree[row][depth][val].isAssigned
+              ) {
+                Notification.warning({
+                  title: "注意",
+                  message: "该任务已经被安排",
+                  showClose: false,
+                  duration: 2500,
+                });
+                return;
+              }
               this.subListBody[row][val].bold = false;
               this.data.goalTree[row][depth][val].bold = false;
               this.$emit("save");
@@ -2212,6 +2252,18 @@ export default {
           item.push({
             label: "重点",
             onClick: () => {
+              if (
+                depth === 6 &&
+                this.data.goalTree[row][depth][val].isAssigned
+              ) {
+                Notification.warning({
+                  title: "注意",
+                  message: "任务已经被安排",
+                  showClose: false,
+                  duration: 2500,
+                });
+                return;
+              }
               this.subListBody[row][val].bold = true;
               this.data.goalTree[row][depth][val].bold = true;
               this.$emit("save");
@@ -2222,7 +2274,23 @@ export default {
           item.push({
             label: "Hours",
             onClick: () => {
+              let dom = document.getElementById("subBody_" + row + "_" + val);
+              let basePx = parseFloat(
+                document
+                  .getElementsByTagName("html")[0]
+                  .style.fontSize.split("px")[0]
+              );
               this.$emit("showHours", val);
+              if (dom) {
+                let offset =
+                  dom.getBoundingClientRect().x +
+                  dom.getBoundingClientRect().width -
+                  document.body.clientWidth +
+                  34.75 * basePx;
+                if (offset > 5) {
+                  this.$refs.tableBody.scrollLeft += offset;
+                }
+              }
             },
           });
         }

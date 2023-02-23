@@ -13,6 +13,7 @@ export const dragTaskMixin = {
             isDragBlockMove: false,
             isHourShow: false,
             showMenu: false,
+            tempVal: -1,
         };
     },
     mounted() {
@@ -20,6 +21,7 @@ export const dragTaskMixin = {
     },
     methods: {
         dragTaskStart(event, row, val) {
+            this.tempVal = val;
             // 锁定被拖拽的元素
             if (event.target.tagName == "INPUT") {
                 this.curDragTdDom = event.target.parentNode;
@@ -30,7 +32,7 @@ export const dragTaskMixin = {
             }
             this.curDragInfo = this.$refs.mainTable.subListBody[row][val];
             // // 组装被拖拽任务的信息
-            let isMain = this.curDragInfo.isMain;
+            let isMain = this.curDragInfo.bold;
             if (isMain) {
                 this.dragTaskInfo.taskLevel = "level1";
             } else {
@@ -53,7 +55,7 @@ export const dragTaskMixin = {
                 document.removeEventListener("mouseup", this.documentUp);
                 Notification.warning({
                     title: "注意",
-                    message: "无法已安排的任务！",
+                    message: "无法安排已安排的任务！",
                     showClose: false,
                     duration: 2500,
                 });
@@ -68,6 +70,19 @@ export const dragTaskMixin = {
                 Notification.warning({
                     title: "注意",
                     message: "无法安排已完成的任务！",
+                    showClose: false,
+                    duration: 2500,
+                });
+                return;
+            }
+            // 日期检测
+            if (this.tempVal !== this.tempDay) {
+                this.isDragBlockMove = false;
+                document.removeEventListener("mousemove", this.documentMove);
+                document.removeEventListener("mouseup", this.documentUp);
+                Notification.warning({
+                    title: "注意",
+                    message: "无法安排不同日的任务！",
                     showClose: false,
                     duration: 2500,
                 });
@@ -147,6 +162,12 @@ export const dragTaskMixin = {
                 this.$refs.mainTable.subListBody[row][val].text = changeInfo.text;
                 this.$bus.goalTable.goalTree[row][6][val].desc = changeInfo.text;
             }
+            this.$bus.goalTable.hoursInfo[val].columns = [
+                this.$refs.hoursPanel.level1Tabs,
+                this.$refs.hoursPanel.level2Tabs,
+                this.$refs.hoursPanel.level3Tabs,
+            ];
+            console.log([...this.$refs.hoursPanel.level2Tabs]);
             this.$bus.$emit("save");
             this.$refs.mainTable.$forceUpdate();
         },
