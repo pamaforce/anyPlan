@@ -513,22 +513,40 @@ export default {
     clickItem(type, row, val, subVal = 0, isDown = false) {
       switch (type) {
         case 0:
-          if (isDown) this.data.aspect[row].goal.showInput = true;
-          else this.data.aspect[row].showInput = true;
+          if (isDown) {
+            if (this.data.aspect[row].goal.showInput) return;
+            this.data.aspect[row].goal.showInput = true;
+          } else {
+            if (this.data.aspect[row].showInput) return;
+            this.data.aspect[row].showInput = true;
+          }
           break;
         case 1:
-          if (isDown) this.data.aspect[row].children[val].goal.showInput = true;
-          else this.data.aspect[row].children[val].showInput = true;
+          if (isDown) {
+            if (this.data.aspect[row].children[val].goal.showInput) return;
+            this.data.aspect[row].children[val].goal.showInput = true;
+          } else {
+            if (this.data.aspect[row].children[val].showInput) return;
+            this.data.aspect[row].children[val].showInput = true;
+          }
           break;
         case 2:
-          if (isDown)
+          if (isDown){
+            if (this.data.aspect[row].children[val].children[
+              subVal
+            ].goal.showInput) return;
             this.data.aspect[row].children[val].children[
               subVal
             ].goal.showInput = true;
-          else
+          }
+          else{
+            if (this.data.aspect[row].children[val].children[
+              subVal
+            ].showInput) return;
             this.data.aspect[row].children[val].children[
               subVal
             ].showInput = true;
+          }
           break;
         default:
           break;

@@ -1814,6 +1814,12 @@ export default {
     },
     //点击单元格
     clickItem(type, row, val) {
+      if (
+        this.supListBody[row][val]?.showInput ||
+        this.subListBody[row][val]?.showInput
+      )
+        return;
+      console.log(123);
       setTimeout(() => {
         if (type === "up") {
           this.supListBody[row][val].showInput = true;

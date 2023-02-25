@@ -42,15 +42,27 @@
     <BottomBar
       @clear="clearData"
       @switchAni="switchAni"
+      @export="exportData"
+      @import="importData"
       :ani="ani"
       :ani2="ani2"
     />
+    <Dialog
+      :visible.sync="exportDialogVisible"
+      :title="title"
+      width="30%"
+      center
+    >
+      <span @click="getContent">
+        {{ content }}
+      </span>
+    </Dialog>
   </div>
 </template>
 
 <script>
 import { Splitpanes, Pane } from "splitpanes";
-import { Notification } from "element-ui";
+import { Notification, Dialog } from "element-ui";
 import AspectTable from "./components/AspectTable.vue";
 import MainTable from "./components/MainTable.vue";
 import HoursPanel from "./components/HoursPanel.vue";
@@ -61,6 +73,7 @@ export default {
   name: "App",
   mixins: [dragTaskMixin],
   components: {
+    Dialog,
     Splitpanes,
     Pane,
     MainTable,
@@ -86,9 +99,55 @@ export default {
       ani2: false,
       tempDay: 0,
       tempInfo: {},
+      exportDialogVisible: false,
+      content: "",
+      title: "",
     };
   },
   methods: {
+    exportData() {
+      this.title = "请点击复制";
+      this.content =
+        window.localStorage.getItem(this.storageKey) ||
+        JSON.stringify({
+          initialTimeStamp: 536428800000,
+          state: 0,
+          aspect: [],
+          goalTree: [],
+          hoursInfo: {},
+        });
+      this.exportDialogVisible = true;
+    },
+    getContent() {
+      let value = this.content;
+      const input = document.createElement("input");
+      input.setAttribute("readonly", "readonly");
+      input.value = value;
+      document.body.appendChild(input);
+      input.setSelectionRange(0, 9999);
+      input.select();
+      document.execCommand("copy");
+      document.body.removeChild(input);
+      Notification.success({
+        title: "成功",
+        message: "内容已自动复制到剪切板",
+        showClose: false,
+        duration: 2500,
+      });
+    },
+    importData() {
+      let ret = prompt("请输入正确格式的Json格式字符串数据");
+      if (ret !== null && ret != "") {
+        window.localStorage.setItem(this.storageKey, ret);
+        Notification.success({
+          title: "成功",
+          message: "导入数据成功",
+          showClose: false,
+          duration: 2500,
+        });
+        location.reload();
+      }
+    },
     handleHideHours() {
       this.showHours = false;
     },
