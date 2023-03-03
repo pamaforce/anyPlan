@@ -6,7 +6,6 @@
         <pane :size="percent">
           <AspectTable
             ref="aspectTable"
-            :data="goalTable"
             @save="saveData"
             @scroll="handleLeftScroll"
             :state="state"
@@ -15,7 +14,6 @@
         <pane :size="100 - percent">
           <MainTable
             ref="mainTable"
-            :data="goalTable"
             :hasAni="ani"
             :hasAni2="ani2"
             :showHours="showHours"
@@ -87,17 +85,10 @@ export default {
       storageKey: "anyPlanUserData_1",
       state: 0,
       percent: 100,
-      goalTable: {
-        initialTimeStamp: 536428800000,
-        state: 0,
-        aspect: [],
-        goalTree: [],
-        hoursInfo: {},
-      },
       showHours: false,
       ani: true,
       ani2: false,
-      tempDay: 0,
+      tempDay: -1,
       tempInfo: {},
       exportDialogVisible: false,
       content: "",
@@ -160,13 +151,14 @@ export default {
         };
       }
       this.tempInfo = { ...this.$bus.goalTable.hoursInfo[e] };
+      console.log(e, this.tempInfo);
       this.showHours = true;
     },
     resize() {
       this.$refs.mainTable.updateTableWidth();
     },
     getData() {
-      this.goalTable = JSON.parse(
+      this.$bus.goalTable = JSON.parse(
         window.localStorage.getItem(this.storageKey) ||
           JSON.stringify({
             initialTimeStamp: 536428800000,
@@ -176,8 +168,7 @@ export default {
             hoursInfo: {},
           })
       );
-      console.log(this.goalTable);
-      this.$bus.goalTable = this.goalTable;
+      console.log(this.$bus.goalTable);
       this.$bus.$on("save", () => {
         console.log("已保存");
         window.localStorage.setItem(
@@ -185,15 +176,14 @@ export default {
           JSON.stringify(this.$bus.goalTable)
         );
       });
-      this.state = this.goalTable.state;
+      this.state = this.$bus.goalTable.state;
       if (this.state > 5) this.state = 5;
       this.changeState(this.state);
     },
     saveData(val, needTableUpdate = true) {
-      this.$bus.goalTable = this.goalTable;
       window.localStorage.setItem(
         this.storageKey,
-        JSON.stringify({ ...this.goalTable, state: this.state })
+        JSON.stringify({ ...this.$bus.goalTable, state: this.state })
       );
       if (needTableUpdate) {
         this.$refs.aspectTable.$forceUpdate();
@@ -202,7 +192,7 @@ export default {
       }
     },
     clearData() {
-      this.goalTable = {
+      this.$bus.goalTable = {
         initialTimeStamp: 536428800000,
         state: 0,
         aspect: [],
@@ -227,7 +217,7 @@ export default {
               this.percent = 30;
               setTimeout(() => {
                 this.$refs.mainTable.updateTableWidth();
-              }, 250);
+              }, 450);
             }, 1050);
           setTimeout(() => {
             this.$refs.mainTable.changeState(5);
@@ -239,7 +229,7 @@ export default {
               this.percent = 30;
               setTimeout(() => {
                 this.$refs.mainTable.updateTableWidth();
-              }, 250);
+              }, 450);
             }, 1050);
           setTimeout(() => {
             this.$refs.mainTable.changeState(6);
@@ -251,7 +241,7 @@ export default {
               this.percent = 30;
               setTimeout(() => {
                 this.$refs.mainTable.updateTableWidth();
-              }, 250);
+              }, 450);
             }, 1050);
           setTimeout(() => {
             this.$refs.mainTable.changeState(6);
@@ -263,7 +253,7 @@ export default {
               this.percent = 30;
               setTimeout(() => {
                 this.$refs.mainTable.updateTableWidth();
-              }, 250);
+              }, 450);
             }, 1050);
           setTimeout(() => {
             this.$refs.mainTable.changeState(8);
@@ -275,7 +265,7 @@ export default {
               this.percent = 30;
               setTimeout(() => {
                 this.$refs.mainTable.updateTableWidth();
-              }, 250);
+              }, 450);
             }, 1050);
           setTimeout(() => {
             this.$refs.mainTable.changeState(9);
@@ -287,7 +277,7 @@ export default {
               this.percent = 30;
               setTimeout(() => {
                 this.$refs.mainTable.updateTableWidth();
-              }, 250);
+              }, 450);
             }, 1050);
           setTimeout(() => {
             this.$refs.mainTable.changeState(10);
@@ -299,7 +289,7 @@ export default {
               this.percent = 30;
               setTimeout(() => {
                 this.$refs.mainTable.updateTableWidth();
-              }, 250);
+              }, 450);
             }, 1050);
           setTimeout(() => {
             this.$refs.mainTable.changeState(11);

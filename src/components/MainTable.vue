@@ -119,7 +119,7 @@
     <div class="table-body-wrapper" @scroll="handleScroll" ref="tableBody">
       <div
         class="table-body-item"
-        v-for="(aspect, j) in data.goalTree"
+        v-for="(aspect, j) in $bus.goalTable.goalTree"
         :key="j"
         :style="
           (marginLeft !== undefined
@@ -274,13 +274,6 @@ import { Notification } from "element-ui";
 export default {
   name: "MainTable",
   props: {
-    data: {
-      type: Object,
-      default: () => ({
-        aspect: [],
-        goalTree: [],
-      }),
-    },
     showHours: {
       type: Boolean,
       default: () => false,
@@ -296,6 +289,8 @@ export default {
   },
   data: () => ({
     //初始深度
+    basePx: 1,
+    cachePx: 1,
     currentDepth: 8,
     tableWidth: 120,
     supList: [],
@@ -328,16 +323,19 @@ export default {
     speed: 1,
   }),
   methods: {
+    updateBasePx() {
+      this.basePx = parseFloat(
+        document.getElementsByTagName("html")[0].style.fontSize.split("px")[0]
+      );
+    },
     dragTaskStart(event, row, val) {
       if (this.showHours) this.$emit("dragTaskStart", event, row, val);
     },
     //处理Body横向滚动
     handleScrollX() {
       if (this.pauseScroll) return;
-      let basePx = parseFloat(
-        document.getElementsByTagName("html")[0].style.fontSize.split("px")[0]
-      );
-      let left = (this.$refs.tableBody.scrollLeft - this.baseOffset) / basePx;
+      let left =
+        this.$refs.tableBody.scrollLeft / this.basePx - this.baseOffset;
       this.marginLeft = left;
       this.supList.map((item, i) => {
         this.supList[i].marginLeft = -left;
@@ -365,7 +363,7 @@ export default {
           this.subList_dom[this.subList_dom.length - 1].index = i;
         }
       });
-      for (let j = 0; j < this.data.goalTree.length; j++) {
+      for (let j = 0; j < this.$bus.goalTable.goalTree.length; j++) {
         this.supListBody[j].map((item, i) => {
           this.supListBody[j][i].marginLeft = -left;
           let temp = this.supListBody[j][i].left - left;
@@ -415,21 +413,16 @@ export default {
       let width = this.tableWidth;
       this.pauseScroll = true;
       this.$refs.content.style.width = this.subList.length * 100 + "%";
-      this.baseOffset =
-        width *
-        val *
-        parseFloat(
-          document.getElementsByTagName("html")[0].style.fontSize.split("px")[0]
-        );
-      this.$refs.tableBody.scrollLeft = this.baseOffset;
-      if (this.$refs.tableBody.scrollLeft < this.baseOffset) {
+      this.baseOffset = width * val;
+      this.$refs.tableBody.scrollLeft = this.baseOffset * this.basePx;
+      if (this.$refs.tableBody.scrollLeft < this.baseOffset * this.basePx) {
         this.$refs.content.style.width =
           parseFloat(
             window.getComputedStyle(this.$refs.content).width.split("px")[0]
           ) +
-          (this.baseOffset - this.$refs.tableBody.scrollLeft) +
+          (this.baseOffset * this.basePx - this.$refs.tableBody.scrollLeft) +
           "px";
-        this.$refs.tableBody.scrollLeft = this.baseOffset;
+        this.$refs.tableBody.scrollLeft = this.baseOffset * this.basePx;
       }
       this.left = width * val;
       this.marginLeft = 0;
@@ -475,22 +468,9 @@ export default {
           (width * this.subList[this.subList.length - 1].daySpan) / 7;
         if (this.currentDepth === 3 && val !== 0) {
           this.pauseScroll = true;
-          this.baseOffset =
-            width *
-            val *
-            parseFloat(
-              document
-                .getElementsByTagName("html")[0]
-                .style.fontSize.split("px")[0]
-            );
+          this.baseOffset = width * val;
           this.$refs.tableBody.scrollLeft =
-            this.baseOffset -
-            (width - firstWidth) *
-              parseFloat(
-                document
-                  .getElementsByTagName("html")[0]
-                  .style.fontSize.split("px")[0]
-              );
+            this.baseOffset * this.basePx - (width - firstWidth) * this.basePx;
           this.left = width * val;
           this.marginLeft = firstWidth - width;
           setTimeout(() => {
@@ -578,7 +558,7 @@ export default {
           this.hasAni ? 2000 / this.speed : 0
         );
       }, 50);
-      if (this.data.goalTree.length) this.subBodyToAni(val);
+      if (this.$bus.goalTable.goalTree.length) this.subBodyToAni(val);
     },
     //点击Header顶部事件处理
     supToAni(val) {
@@ -611,15 +591,10 @@ export default {
       let percent = parseInt(
         (val / this.supList.length) * this.supPrevList.length
       );
-      this.baseOffset =
-        width *
-        percent *
-        parseFloat(
-          document.getElementsByTagName("html")[0].style.fontSize.split("px")[0]
-        );
+      this.baseOffset = width * percent;
       this.left = 0;
       this.marginLeft = width * percent;
-      this.$refs.tableBody.scrollLeft = this.baseOffset;
+      this.$refs.tableBody.scrollLeft = this.baseOffset * this.basePx;
       setTimeout(() => {
         if (this.hasAni2) {
           this.supList_dom = [];
@@ -930,7 +905,7 @@ export default {
                   current:
                     nowDate.getFullYear() == tempYear &&
                     nowDate.getMonth() == tM &&
-                    nowDate.getDate() == 7 - tempNo,
+                    nowDate.getDate() <= 7 - tempNo,
                   yearGroup: tempYear,
                   yearDays: totalDay,
                   daySpan: 7 - tempNo,
@@ -956,7 +931,7 @@ export default {
                       y.current ||
                       (nowDate.getFullYear() == tempYear &&
                         nowDate.getMonth() == tM &&
-                        nowDate.getDate() == 7 - tempNo),
+                        nowDate.getDate() <= 7 - tempNo),
                     yearGroup: y.yearGroup,
                     yearDays: y.yearDays,
                     daySpan: 7,
@@ -969,6 +944,7 @@ export default {
                 if (nD > tempArr[tM]) {
                   nD -= tempArr[tM];
                   tM++;
+                  cFlag = true;
                 }
                 cFlag = cFlag && nowDate.getDate() <= nD;
                 tempBase += 7;
@@ -1004,7 +980,7 @@ export default {
                   current:
                     nowDate.getFullYear() == tempYear &&
                     nowDate.getMonth() == tM &&
-                    nowDate.getDate() == tD,
+                    nowDate.getDate() >= tD,
                   yearGroup: tempYear,
                   yearDays: totalDay,
                   daySpan: 32 - tD,
@@ -1081,7 +1057,7 @@ export default {
     },
     //Body下钻动画
     subBodyToAni(val) {
-      for (let i = 0; i < this.data.goalTree.length; i++) {
+      for (let i = 0; i < this.$bus.goalTable.goalTree.length; i++) {
         this.subNextListBody[i] = this.fetchBodyData(this.currentDepth - 1, i);
         this.subNextListBody_dom[i] = [];
         this.subNextListBody[i].map((item, j) => {
@@ -1103,7 +1079,7 @@ export default {
         (width / this.subNextListBody[0].length) * this.subListBody[0].length;
       this.$nextTick(() => {
         let subLeftTotal = subWidth * val;
-        for (let j = 0; j < this.data.goalTree.length; j++) {
+        for (let j = 0; j < this.$bus.goalTable.goalTree.length; j++) {
           this.subNextListBody[j].map((item, i) => {
             this.subNextListBody[j][i].top = 6.4;
             this.subNextListBody[j][i].width = nextWidth;
@@ -1114,7 +1090,7 @@ export default {
       });
       setTimeout(() => {
         this.needAni = true;
-        for (let j = 0; j < this.data.goalTree.length; j++) {
+        for (let j = 0; j < this.$bus.goalTable.goalTree.length; j++) {
           this.supListBody[j].map((item, i) => {
             this.supListBody[j][i].top = -3.125;
             this.supListBody[j][i].width = supWidth;
@@ -1234,7 +1210,7 @@ export default {
     supBodyToAni(val) {
       this.needAni = false;
       let width = this.tableWidth;
-      for (let j = 0; j < this.data.goalTree.length; j++) {
+      for (let j = 0; j < this.$bus.goalTable.goalTree.length; j++) {
         this.supPrevListBody[j] = this.fetchBodyData(this.currentDepth, j);
         this.supPrevListBody[j].map((item, i) => {
           this.supPrevListBody[j][i].top = -3.124;
@@ -1259,7 +1235,7 @@ export default {
       }
       setTimeout(() => {
         if (this.hasAni2) {
-          for (let j = 0; j < this.data.goalTree.length; j++) {
+          for (let j = 0; j < this.$bus.goalTable.goalTree.length; j++) {
             this.supListBody_dom[j] = [];
             this.supListBody[j].map((item, i) => {
               this.supListBody[j][i].hide = false;
@@ -1286,7 +1262,7 @@ export default {
         }
         this.needAni = true;
         setTimeout(() => {
-          for (let j = 0; j < this.data.goalTree.length; j++) {
+          for (let j = 0; j < this.$bus.goalTable.goalTree.length; j++) {
             let percent = parseInt(
               (val / this.supListBody[j].length) *
                 this.supPrevListBody[j].length
@@ -1367,7 +1343,7 @@ export default {
       switch (type) {
         case "down":
           this.needAni = false;
-          for (let j = 0; j < this.data.goalTree.length; j++) {
+          for (let j = 0; j < this.$bus.goalTable.goalTree.length; j++) {
             this.supListBody[j] = this.subListBody[j];
             this.subListBody[j] = this.subNextListBody[j];
             this.supListBody[j].map((item, i) => {
@@ -1403,7 +1379,7 @@ export default {
           break;
         case "up":
           this.needAni = false;
-          for (let j = 0; j < this.data.goalTree.length; j++) {
+          for (let j = 0; j < this.$bus.goalTable.goalTree.length; j++) {
             this.subListBody[j] = this.supListBody[j];
             this.supListBody[j] = this.supPrevListBody[j];
             this.supListBody[j].map((item, i) => {
@@ -1470,6 +1446,7 @@ export default {
       let tempList = [],
         tempSum = 0,
         tempCnt = 0,
+        totalCnt = 0,
         tempYear,
         tempArr,
         curYear,
@@ -1478,9 +1455,10 @@ export default {
         case 8:
           return [
             {
-              text: this.data.goalTree[row]?.[0]?.[0]?.desc ?? "",
-              finish: this.data.goalTree[row]?.[0]?.[0]?.finish ?? false,
-              bold: this.data.goalTree[row]?.[0]?.[0]?.bold ?? false,
+              text: this.$bus.goalTable.goalTree[row]?.[0]?.[0]?.desc ?? "",
+              finish:
+                this.$bus.goalTable.goalTree[row]?.[0]?.[0]?.finish ?? false,
+              bold: this.$bus.goalTable.goalTree[row]?.[0]?.[0]?.bold ?? false,
               showInput: false,
               top: 0,
               left: 0,
@@ -1493,9 +1471,10 @@ export default {
           tempList = [];
           for (let i = 0; i < 20; i++) {
             tempList.push({
-              text: this.data.goalTree[row]?.[1]?.[i]?.desc ?? "",
-              finish: this.data.goalTree[row]?.[1]?.[i]?.finish ?? false,
-              bold: this.data.goalTree[row]?.[1]?.[i]?.bold ?? false,
+              text: this.$bus.goalTable.goalTree[row]?.[1]?.[i]?.desc ?? "",
+              finish:
+                this.$bus.goalTable.goalTree[row]?.[1]?.[i]?.finish ?? false,
+              bold: this.$bus.goalTable.goalTree[row]?.[1]?.[i]?.bold ?? false,
               showInput: false,
               top: 0,
               left: 0,
@@ -1507,15 +1486,21 @@ export default {
           return tempList;
         case 6:
           tempList = [];
+          totalCnt = 0;
           for (let j = 0; j < 20; j++) {
             for (let i = 0; i < 5; i++) {
               curYear = this.indexList[1] * 5 - 5 * j - i;
               isFar = curYear < -5 || curYear > 1;
               tempList.push({
-                text: this.data.goalTree[row]?.[2]?.[j * 5 + i]?.desc ?? "",
+                text:
+                  this.$bus.goalTable.goalTree[row]?.[2]?.[totalCnt]?.desc ??
+                  "",
                 finish:
-                  this.data.goalTree[row]?.[2]?.[j * 5 + i]?.finish ?? false,
-                bold: this.data.goalTree[row]?.[2]?.[j * 5 + i]?.bold ?? false,
+                  this.$bus.goalTable.goalTree[row]?.[2]?.[totalCnt]?.finish ??
+                  false,
+                bold:
+                  this.$bus.goalTable.goalTree[row]?.[2]?.[totalCnt]?.bold ??
+                  false,
                 showInput: false,
                 top: 0,
                 left: 0,
@@ -1523,11 +1508,13 @@ export default {
                 marginLeft: 0,
                 hide: isFar,
               });
+              totalCnt++;
             }
           }
           return tempList;
         case 5:
           tempList = [];
+          totalCnt = 0;
           for (let k = 0; k < 20; k++) {
             for (let j = 0; j < 5; j++) {
               curYear = this.indexList[2] - 5 * k - j;
@@ -1535,13 +1522,13 @@ export default {
               for (let i = 0; i < 4; i++) {
                 tempList.push({
                   text:
-                    this.data.goalTree[row]?.[3]?.[k * 20 + j * 5 + i]?.desc ??
+                    this.$bus.goalTable.goalTree[row]?.[3]?.[totalCnt]?.desc ??
                     "",
                   finish:
-                    this.data.goalTree[row]?.[3]?.[k * 20 + j * 5 + i]
+                    this.$bus.goalTable.goalTree[row]?.[3]?.[totalCnt]
                       ?.finish ?? false,
                   bold:
-                    this.data.goalTree[row]?.[3]?.[k * 20 + j * 5 + i]?.bold ??
+                    this.$bus.goalTable.goalTree[row]?.[3]?.[totalCnt]?.bold ??
                     false,
                   showInput: false,
                   top: 0,
@@ -1550,12 +1537,14 @@ export default {
                   marginLeft: 0,
                   hide: isFar,
                 });
+                totalCnt++;
               }
             }
           }
           return tempList;
         case 4:
           tempList = [];
+          totalCnt = 0;
           for (let p = 0; p < 20; p++) {
             for (let k = 0; k < 5; k++) {
               curYear = this.indexList[3] / 4 - 5 * p - k;
@@ -1564,13 +1553,13 @@ export default {
                 for (let i = 0; i < 3; i++) {
                   tempList.push({
                     text:
-                      this.data.goalTree[row]?.[4]?.[p * 20 + k * 5 + j * 4 + i]
+                      this.$bus.goalTable.goalTree[row]?.[4]?.[totalCnt]
                         ?.desc ?? "",
                     finish:
-                      this.data.goalTree[row]?.[4]?.[p * 20 + k * 5 + j * 4 + i]
+                      this.$bus.goalTable.goalTree[row]?.[4]?.[totalCnt]
                         ?.finish ?? false,
                     bold:
-                      this.data.goalTree[row]?.[4]?.[p * 20 + k * 5 + j * 4 + i]
+                      this.$bus.goalTable.goalTree[row]?.[4]?.[totalCnt]
                         ?.bold ?? false,
                     showInput: false,
                     top: 0,
@@ -1579,6 +1568,7 @@ export default {
                     marginLeft: 0,
                     hide: isFar,
                   });
+                  totalCnt++;
                 }
               }
             }
@@ -1621,9 +1611,12 @@ export default {
               let x = tempCnt++;
               if (m === 0 && p === 0) {
                 tempList.push({
-                  text: this.data.goalTree[row]?.[5]?.[x]?.desc ?? "",
-                  finish: this.data.goalTree[row]?.[5]?.[x]?.finish ?? false,
-                  bold: this.data.goalTree[row]?.[5]?.[x]?.bold ?? false,
+                  text: this.$bus.goalTable.goalTree[row]?.[5]?.[x]?.desc ?? "",
+                  finish:
+                    this.$bus.goalTable.goalTree[row]?.[5]?.[x]?.finish ??
+                    false,
+                  bold:
+                    this.$bus.goalTable.goalTree[row]?.[5]?.[x]?.bold ?? false,
                   showInput: false,
                   top: 0,
                   left: 0,
@@ -1662,9 +1655,12 @@ export default {
                 tempBase += 7;
                 let x = tempCnt++;
                 tempList.push({
-                  text: this.data.goalTree[row]?.[5]?.[x]?.desc ?? "",
-                  finish: this.data.goalTree[row]?.[5]?.[x]?.finish ?? false,
-                  bold: this.data.goalTree[row]?.[5]?.[x]?.bold ?? false,
+                  text: this.$bus.goalTable.goalTree[row]?.[5]?.[x]?.desc ?? "",
+                  finish:
+                    this.$bus.goalTable.goalTree[row]?.[5]?.[x]?.finish ??
+                    false,
+                  bold:
+                    this.$bus.goalTable.goalTree[row]?.[5]?.[x]?.bold ?? false,
                   showInput: false,
                   top: 0,
                   left: 0,
@@ -1684,9 +1680,12 @@ export default {
               if (tempBase < totalDay) {
                 let x = tempCnt++;
                 tempList.push({
-                  text: this.data.goalTree[row]?.[5]?.[x]?.desc ?? "",
-                  finish: this.data.goalTree[row]?.[5]?.[x]?.finish ?? false,
-                  bold: this.data.goalTree[row]?.[5]?.[x]?.bold ?? false,
+                  text: this.$bus.goalTable.goalTree[row]?.[5]?.[x]?.desc ?? "",
+                  finish:
+                    this.$bus.goalTable.goalTree[row]?.[5]?.[x]?.finish ??
+                    false,
+                  bold:
+                    this.$bus.goalTable.goalTree[row]?.[5]?.[x]?.bold ?? false,
                   showInput: false,
                   top: 0,
                   left: 0,
@@ -1726,11 +1725,15 @@ export default {
               for (let k = 1; k <= tempArr[i]; k++) {
                 let x = tempCnt++;
                 tempList.push({
-                  text: this.data.goalTree[row]?.[6]?.[x]?.desc ?? "",
-                  finish: this.data.goalTree[row]?.[6]?.[x]?.finish ?? false,
-                  bold: this.data.goalTree[row]?.[6]?.[x]?.bold ?? false,
+                  text: this.$bus.goalTable.goalTree[row]?.[6]?.[x]?.desc ?? "",
+                  finish:
+                    this.$bus.goalTable.goalTree[row]?.[6]?.[x]?.finish ??
+                    false,
+                  bold:
+                    this.$bus.goalTable.goalTree[row]?.[6]?.[x]?.bold ?? false,
                   isAssigned:
-                    this.data.goalTree[row]?.[6]?.[x]?.isAssigned ?? false,
+                    this.$bus.goalTable.goalTree[row]?.[6]?.[x]?.isAssigned ??
+                    false,
                   showInput: false,
                   top: 0,
                   left: 0,
@@ -1766,7 +1769,7 @@ export default {
           this.subList_dom[this.subList_dom.length - 1].index = i;
         }
       });
-      for (let i = 0; i < this.data.goalTree.length; i++) {
+      for (let i = 0; i < this.$bus.goalTable.goalTree.length; i++) {
         this.supListBody[i] = this.fetchBodyData(this.currentDepth, i);
         this.supListBody_dom[i] = [];
         this.supListBody[i].map((item, j) => {
@@ -1790,7 +1793,7 @@ export default {
     },
     //初始化行样式
     initBodyLine() {
-      for (let i = 0; i < this.data.goalTree.length; i++) {
+      for (let i = 0; i < this.$bus.goalTable.goalTree.length; i++) {
         this.supListBody[i] = this.fetchBodyData(this.currentDepth, i);
         this.supListBody_dom[i] = [];
         this.supListBody[i].map((item, j) => {
@@ -1819,14 +1822,13 @@ export default {
         this.subListBody[row][val]?.showInput
       )
         return;
-      console.log(123);
       setTimeout(() => {
         if (type === "up") {
           this.supListBody[row][val].showInput = true;
         } else {
           if (
             this.currentDepth === 3 &&
-            this.data.goalTree[row]?.[6]?.[val]?.isAssigned
+            this.$bus.goalTable.goalTree[row]?.[6]?.[val]?.isAssigned
           ) {
             Notification.warning({
               title: "注意",
@@ -1858,6 +1860,8 @@ export default {
     },
     //输入框失焦
     blurItem(type, row, val) {
+      console.log(type, row, val);
+      console.log(this.currentDepth);
       let depth = 8 - this.currentDepth;
       if (type === "down") {
         depth++;
@@ -1865,31 +1869,33 @@ export default {
       } else {
         this.supListBody[row][val].showInput = false;
       }
-      if (!this.data.goalTree[row][depth]) this.data.goalTree[row][depth] = {};
-      if (!this.data.goalTree[row][depth][val])
-        this.data.goalTree[row][depth][val] = {};
+      if (!this.$bus.goalTable.goalTree[row][depth])
+        this.$bus.goalTable.goalTree[row][depth] = {};
+      if (!this.$bus.goalTable.goalTree[row][depth][val])
+        this.$bus.goalTable.goalTree[row][depth][val] = {};
       if (type === "down") {
-        this.data.goalTree[row][depth][val].desc =
+        this.$bus.goalTable.goalTree[row][depth][val].desc =
           this.subListBody[row][val].text;
       } else {
-        this.data.goalTree[row][depth][val].desc =
+        this.$bus.goalTable.goalTree[row][depth][val].desc =
           this.supListBody[row][val].text;
       }
       if (depth === 0) {
         this.findAspectAndUpdateText(
           row,
-          this.data.goalTree[row][depth][val].desc
+          this.$bus.goalTable.goalTree[row][depth][val].desc
         );
       }
-      this.$emit("save");
+      this.$forceUpdate();
+      this.$bus.$emit("save");
     },
     //寻找对应行的aspect并更新text
     findAspectAndUpdateText(row, text) {
       let index = 0;
-      for (let i = 0; i < this.data.aspect.length; i++) {
-        if (this.data.aspect[i].children.length === 0) {
+      for (let i = 0; i < this.$bus.goalTable.aspect.length; i++) {
+        if (this.$bus.goalTable.aspect[i].children.length === 0) {
           if (index === row) {
-            this.data.aspect[i].children = [
+            this.$bus.goalTable.aspect[i].children = [
               {
                 text: "方面",
                 goal: {
@@ -1910,10 +1916,14 @@ export default {
           }
           index += 1;
         }
-        for (let j = 0; j < this.data.aspect[i].children.length; j++) {
-          if (this.data.aspect[i].children[j].children.length === 0) {
+        for (
+          let j = 0;
+          j < this.$bus.goalTable.aspect[i].children.length;
+          j++
+        ) {
+          if (this.$bus.goalTable.aspect[i].children[j].children.length === 0) {
             if (index === row) {
-              this.data.aspect[i].children[j].children = [
+              this.$bus.goalTable.aspect[i].children[j].children = [
                 {
                   text: "方面",
                   goal: {
@@ -1928,11 +1938,12 @@ export default {
           }
           for (
             let k = 0;
-            k < this.data.aspect[i].children[j].children.length;
+            k < this.$bus.goalTable.aspect[i].children[j].children.length;
             k++
           ) {
             if (index === row) {
-              this.data.aspect[i].children[j].children[k].goal.text = text;
+              this.$bus.goalTable.aspect[i].children[j].children[k].goal.text =
+                text;
               return;
             }
             index++;
@@ -1943,13 +1954,11 @@ export default {
     //更新表格宽度
     updateTableWidth() {
       if (this.needAni) return;
-      let totalWidth = parseFloat(
-        document.getElementsByTagName("html")[0].style.fontSize.split("px")[0]
-      );
+      let totalWidth = this.basePx;
       let tableWidth = this.$refs.table.offsetWidth;
       this.tableWidth = tableWidth / totalWidth;
       this.initHeaderStyle(this.indexList[8 - this.currentDepth]);
-      for (let i = 0; i < this.data.goalTree.length; i++) {
+      for (let i = 0; i < this.$bus.goalTable.goalTree.length; i++) {
         this.initBodyStyle(i, this.indexList[8 - this.currentDepth]);
       }
     },
@@ -2168,8 +2177,8 @@ export default {
             label: "取消完成",
             onClick: () => {
               this.supListBody[row][val].finish = false;
-              this.data.goalTree[row][depth][val].finish = false;
-              this.$emit("save");
+              this.$bus.goalTable.goalTree[row][depth][val].finish = false;
+              this.$bus.$emit("save");
             },
           });
         } else {
@@ -2177,8 +2186,8 @@ export default {
             label: "完成",
             onClick: () => {
               this.supListBody[row][val].finish = true;
-              this.data.goalTree[row][depth][val].finish = true;
-              this.$emit("save");
+              this.$bus.goalTable.goalTree[row][depth][val].finish = true;
+              this.$bus.$emit("save");
             },
           });
         }
@@ -2187,8 +2196,8 @@ export default {
             label: "取消重点",
             onClick: () => {
               this.supListBody[row][val].bold = false;
-              this.data.goalTree[row][depth][val].bold = false;
-              this.$emit("save");
+              this.$bus.goalTable.goalTree[row][depth][val].bold = false;
+              this.$bus.$emit("save");
             },
           });
         } else {
@@ -2196,8 +2205,8 @@ export default {
             label: "重点",
             onClick: () => {
               this.supListBody[row][val].bold = true;
-              this.data.goalTree[row][depth][val].bold = true;
-              this.$emit("save");
+              this.$bus.goalTable.goalTree[row][depth][val].bold = true;
+              this.$bus.$emit("save");
             },
           });
         }
@@ -2207,8 +2216,8 @@ export default {
             label: "取消完成",
             onClick: () => {
               this.subListBody[row][val].finish = false;
-              this.data.goalTree[row][depth][val].finish = false;
-              this.$emit("save");
+              this.$bus.goalTable.goalTree[row][depth][val].finish = false;
+              this.$bus.$emit("save");
             },
           });
         } else {
@@ -2217,7 +2226,7 @@ export default {
             onClick: () => {
               if (
                 depth === 6 &&
-                this.data.goalTree[row][depth][val].isAssigned
+                this.$bus.goalTable.goalTree[row][depth][val].isAssigned
               ) {
                 Notification.warning({
                   title: "注意",
@@ -2228,8 +2237,8 @@ export default {
                 return;
               }
               this.subListBody[row][val].finish = true;
-              this.data.goalTree[row][depth][val].finish = true;
-              this.$emit("save");
+              this.$bus.goalTable.goalTree[row][depth][val].finish = true;
+              this.$bus.$emit("save");
             },
           });
         }
@@ -2239,7 +2248,7 @@ export default {
             onClick: () => {
               if (
                 depth === 6 &&
-                this.data.goalTree[row][depth][val].isAssigned
+                this.$bus.goalTable.goalTree[row][depth][val].isAssigned
               ) {
                 Notification.warning({
                   title: "注意",
@@ -2250,8 +2259,8 @@ export default {
                 return;
               }
               this.subListBody[row][val].bold = false;
-              this.data.goalTree[row][depth][val].bold = false;
-              this.$emit("save");
+              this.$bus.goalTable.goalTree[row][depth][val].bold = false;
+              this.$bus.$emit("save");
             },
           });
         } else {
@@ -2260,7 +2269,7 @@ export default {
             onClick: () => {
               if (
                 depth === 6 &&
-                this.data.goalTree[row][depth][val].isAssigned
+                this.$bus.goalTable.goalTree[row][depth][val].isAssigned
               ) {
                 Notification.warning({
                   title: "注意",
@@ -2271,8 +2280,8 @@ export default {
                 return;
               }
               this.subListBody[row][val].bold = true;
-              this.data.goalTree[row][depth][val].bold = true;
-              this.$emit("save");
+              this.$bus.goalTable.goalTree[row][depth][val].bold = true;
+              this.$bus.$emit("save");
             },
           });
         }
@@ -2281,18 +2290,13 @@ export default {
             label: "Hours",
             onClick: () => {
               let dom = document.getElementById("subBody_" + row + "_" + val);
-              let basePx = parseFloat(
-                document
-                  .getElementsByTagName("html")[0]
-                  .style.fontSize.split("px")[0]
-              );
               this.$emit("showHours", val);
               if (dom) {
                 let offset =
                   dom.getBoundingClientRect().x +
                   dom.getBoundingClientRect().width -
                   document.body.clientWidth +
-                  34.75 * basePx;
+                  34.75 * this.basePx;
                 if (offset > 5) {
                   this.$refs.tableBody.scrollLeft += offset;
                 }
@@ -2316,6 +2320,7 @@ export default {
     },
   },
   created() {
+    this.updateBasePx();
     this.birth = new Date(this.$bus.goalTable.initialTimeStamp);
     this.birthYear = this.birth.getFullYear();
     setTimeout(() => {
@@ -2323,6 +2328,13 @@ export default {
         this.initData();
       });
     }, 10);
+    this.cachePx = this.basePx;
+    window.addEventListener("resize", () => {
+      this.updateBasePx();
+      this.$refs.tableBody.scrollLeft =
+        (this.$refs.tableBody.scrollLeft / this.cachePx) * this.basePx;
+      this.cachePx = this.basePx;
+    });
   },
 };
 </script>
@@ -2519,13 +2531,13 @@ export default {
 .bold {
   font-weight: 700;
 }
+.assigned {
+  color: green;
+}
 .finish {
   color: rgb(170, 170, 170);
   text-decoration: line-through;
   font-weight: bold;
-}
-.assigned {
-  color: green;
 }
 .ani,
 .ani1 {

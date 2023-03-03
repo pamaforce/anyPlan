@@ -51,7 +51,7 @@
     <div class="aspect-body-wrapper" @scroll="handleScroll()" ref="aspectBody">
       <div
         class="aspect-body-item"
-        v-for="(aspect, j) in data.aspect"
+        v-for="(aspect, j) in $bus.goalTable.aspect"
         :key="j"
         @contextmenu.prevent.stop="
           (val) => {
@@ -211,13 +211,6 @@
 import { Notification } from "element-ui";
 export default {
   props: {
-    data: {
-      type: Object,
-      default: () => ({
-        aspect: [],
-        goalTree: [],
-      }),
-    },
     state: {
       type: Number,
       default: () => 0,
@@ -238,7 +231,7 @@ export default {
       switch (type) {
         case 0:
           temp = `成功添加一个节点 "业"`;
-          this.data.aspect.push({
+          this.$bus.goalTable.aspect.push({
             text: "业",
             goal: {
               text: "业的一生目标",
@@ -261,11 +254,11 @@ export default {
               },
             ],
           });
-          this.data.goalTree.push({});
+          this.$bus.goalTable.goalTree.push({});
           break;
         case 1:
           temp = `成功插入一个节点 "业"`;
-          this.data.aspect.splice(info[0], 0, {
+          this.$bus.goalTable.aspect.splice(info[0], 0, {
             text: "业",
             goal: {
               text: "业的一生目标",
@@ -291,20 +284,26 @@ export default {
           {
             let index = 0;
             for (let i = 0; i < info[0]; i++) {
-              if (this.data.aspect[i].children.length) {
-                for (let j = 0; j < this.data.aspect[i].children.length; j++) {
-                  index += this.data.aspect[i].children[j].children.length || 1;
+              if (this.$bus.goalTable.aspect[i].children.length) {
+                for (
+                  let j = 0;
+                  j < this.$bus.goalTable.aspect[i].children.length;
+                  j++
+                ) {
+                  index +=
+                    this.$bus.goalTable.aspect[i].children[j].children.length ||
+                    1;
                 }
               } else {
                 index += 1;
               }
             }
-            this.data.goalTree.splice(index, 0, {});
+            this.$bus.goalTable.goalTree.splice(index, 0, {});
           }
           break;
         case 2:
           temp = `成功添加一个节点 "方面"`;
-          this.data.aspect[info[0]].children.push({
+          this.$bus.goalTable.aspect[info[0]].children.push({
             text: "方面",
             goal: {
               text: "方面的一生目标",
@@ -319,19 +318,25 @@ export default {
               },
             ],
           });
-          if (this.data.aspect[info[0]].children.length !== 1) {
+          if (this.$bus.goalTable.aspect[info[0]].children.length !== 1) {
             let index = 1;
             for (let i = 0; i <= info[0]; i++) {
-              for (let j = 0; j < this.data.aspect[i].children.length; j++) {
-                index += this.data.aspect[i].children[j].children.length || 1;
+              for (
+                let j = 0;
+                j < this.$bus.goalTable.aspect[i].children.length;
+                j++
+              ) {
+                index +=
+                  this.$bus.goalTable.aspect[i].children[j].children.length ||
+                  1;
               }
             }
-            this.data.goalTree.splice(index, 0, {});
+            this.$bus.goalTable.goalTree.splice(index, 0, {});
           }
           break;
         case 3:
           temp = `成功插入一个节点 "方面"`;
-          this.data.aspect[info[0]].children.splice(info[1], 0, {
+          this.$bus.goalTable.aspect[info[0]].children.splice(info[1], 0, {
             text: "方面",
             goal: {
               text: "方面的一生目标",
@@ -350,23 +355,30 @@ export default {
             let index = 0;
             for (let j = 0; j < info[1]; j++) {
               index +=
-                this.data.aspect[info[0]].children[j].children.length || 1;
+                this.$bus.goalTable.aspect[info[0]].children[j].children
+                  .length || 1;
             }
             for (let i = 0; i < info[0]; i++) {
-              if (this.data.aspect[i].children.length) {
-                for (let j = 0; j < this.data.aspect[i].children.length; j++) {
-                  index += this.data.aspect[i].children[j].children.length || 1;
+              if (this.$bus.goalTable.aspect[i].children.length) {
+                for (
+                  let j = 0;
+                  j < this.$bus.goalTable.aspect[i].children.length;
+                  j++
+                ) {
+                  index +=
+                    this.$bus.goalTable.aspect[i].children[j].children.length ||
+                    1;
                 }
               } else {
                 index += 1;
               }
             }
-            this.data.goalTree.splice(index, 0, {});
+            this.$bus.goalTable.goalTree.splice(index, 0, {});
           }
           break;
         case 4:
           temp = `成功添加一个节点 "项目"`;
-          this.data.aspect[info[0]].children[info[1]].children.push({
+          this.$bus.goalTable.aspect[info[0]].children[info[1]].children.push({
             text: "项目",
             goal: {
               text: "项目的一生目标",
@@ -374,29 +386,38 @@ export default {
             children: [],
           });
           if (
-            this.data.aspect[info[0]].children[info[1]].children.length !== 1
+            this.$bus.goalTable.aspect[info[0]].children[info[1]].children
+              .length !== 1
           ) {
             let index =
-              this.data.aspect[info[0]].children[info[1]].children.length - 1;
+              this.$bus.goalTable.aspect[info[0]].children[info[1]].children
+                .length - 1;
             for (let i = 0; i < info[1]; i++) {
               index +=
-                this.data.aspect[info[0]].children[i].children.length || 1;
+                this.$bus.goalTable.aspect[info[0]].children[i].children
+                  .length || 1;
             }
             for (let i = 0; i < info[0]; i++) {
-              if (this.data.aspect[i].children.length) {
-                for (let j = 0; j < this.data.aspect[i].children.length; j++) {
-                  index += this.data.aspect[i].children[j].children.length || 1;
+              if (this.$bus.goalTable.aspect[i].children.length) {
+                for (
+                  let j = 0;
+                  j < this.$bus.goalTable.aspect[i].children.length;
+                  j++
+                ) {
+                  index +=
+                    this.$bus.goalTable.aspect[i].children[j].children.length ||
+                    1;
                 }
               } else {
                 index += 1;
               }
             }
-            this.data.goalTree.splice(index, 0, {});
+            this.$bus.goalTable.goalTree.splice(index, 0, {});
           }
           break;
         case 5:
           temp = `成功插入一个节点 "项目"`;
-          this.data.aspect[info[0]].children[info[1]].children.splice(
+          this.$bus.goalTable.aspect[info[0]].children[info[1]].children.splice(
             info[2],
             0,
             {
@@ -411,18 +432,25 @@ export default {
             let index = info[2];
             for (let i = 0; i < info[1]; i++) {
               index +=
-                this.data.aspect[info[0]].children[i].children.length || 1;
+                this.$bus.goalTable.aspect[info[0]].children[i].children
+                  .length || 1;
             }
             for (let i = 0; i < info[0]; i++) {
-              if (this.data.aspect[i].children.length) {
-                for (let j = 0; j < this.data.aspect[i].children.length; j++) {
-                  index += this.data.aspect[i].children[j].children.length || 1;
+              if (this.$bus.goalTable.aspect[i].children.length) {
+                for (
+                  let j = 0;
+                  j < this.$bus.goalTable.aspect[i].children.length;
+                  j++
+                ) {
+                  index +=
+                    this.$bus.goalTable.aspect[i].children[j].children.length ||
+                    1;
                 }
               } else {
                 index += 1;
               }
             }
-            this.data.goalTree.splice(index, 0, {});
+            this.$bus.goalTable.goalTree.splice(index, 0, {});
           }
           break;
 
@@ -441,60 +469,71 @@ export default {
       let temp = "成功删除一条数据";
       switch (type) {
         case 0:
-          temp = `成功删除 "业"：${this.data.aspect[info[0]].text}`;
+          temp = `成功删除 "业"：${this.$bus.goalTable.aspect[info[0]].text}`;
           {
             let index = 0;
             for (let i = 0; i < info[0]; i++) {
-              index += this.data.aspect[i].children.length || 1;
+              index += this.$bus.goalTable.aspect[i].children.length || 1;
             }
             let num = 0;
             for (
               let i = 0;
-              i < this.data.aspect[info[0]].children.length;
+              i < this.$bus.goalTable.aspect[info[0]].children.length;
               i++
             ) {
-              num += this.data.aspect[info[0]].children[i].children.length || 1;
+              num +=
+                this.$bus.goalTable.aspect[info[0]].children[i].children
+                  .length || 1;
             }
-            this.data.aspect.splice(info[0], 1);
-            this.data.goalTree.splice(index, num);
+            this.$bus.goalTable.aspect.splice(info[0], 1);
+            this.$bus.goalTable.goalTree.splice(index, num);
           }
           break;
         case 1:
           temp = `成功删除 "方面"：${
-            this.data.aspect[info[0]].children[info[1]].text
+            this.$bus.goalTable.aspect[info[0]].children[info[1]].text
           }`;
           {
             let index = info[1];
             for (let i = 0; i < info[0]; i++) {
-              index += this.data.aspect[i].children.length || 1;
+              index += this.$bus.goalTable.aspect[i].children.length || 1;
             }
             let num =
-              this.data.aspect[info[0]].children[info[1]].children.length || 1;
-            this.data.aspect[info[0]].children.splice(info[1], 1);
-            this.data.goalTree.splice(index, num);
+              this.$bus.goalTable.aspect[info[0]].children[info[1]].children
+                .length || 1;
+            this.$bus.goalTable.aspect[info[0]].children.splice(info[1], 1);
+            this.$bus.goalTable.goalTree.splice(index, num);
           }
           break;
         case 2:
           temp = `成功删除 "项目"：${
-            this.data.aspect[info[0]].children[info[1]].children[info[2]].text
+            this.$bus.goalTable.aspect[info[0]].children[info[1]].children[
+              info[2]
+            ].text
           }`;
           {
             let index = info[2];
             for (let i = 0; i < info[1]; i++) {
               index +=
-                this.data.aspect[info[0]].children[i].children.length || 1;
+                this.$bus.goalTable.aspect[info[0]].children[i].children
+                  .length || 1;
             }
             for (let i = 0; i < info[0]; i++) {
-              for (let j = 0; j < this.data.aspect[i].children.length; j++) {
-                index += this.data.aspect[i].children[j].children.length || 1;
+              for (
+                let j = 0;
+                j < this.$bus.goalTable.aspect[i].children.length;
+                j++
+              ) {
+                index +=
+                  this.$bus.goalTable.aspect[i].children[j].children.length ||
+                  1;
               }
             }
-            this.data.aspect[info[0]].children[info[1]].children.splice(
-              info[2],
-              1
-            );
+            this.$bus.goalTable.aspect[info[0]].children[
+              info[1]
+            ].children.splice(info[2], 1);
             console.log(index);
-            // this.data.goalTree.splice(index, 1);
+            // this.$bus.goalTable.goalTree.splice(index, 1);
           }
           break;
 
@@ -514,36 +553,40 @@ export default {
       switch (type) {
         case 0:
           if (isDown) {
-            if (this.data.aspect[row].goal.showInput) return;
-            this.data.aspect[row].goal.showInput = true;
+            if (this.$bus.goalTable.aspect[row].goal.showInput) return;
+            this.$bus.goalTable.aspect[row].goal.showInput = true;
           } else {
-            if (this.data.aspect[row].showInput) return;
-            this.data.aspect[row].showInput = true;
+            if (this.$bus.goalTable.aspect[row].showInput) return;
+            this.$bus.goalTable.aspect[row].showInput = true;
           }
           break;
         case 1:
           if (isDown) {
-            if (this.data.aspect[row].children[val].goal.showInput) return;
-            this.data.aspect[row].children[val].goal.showInput = true;
+            if (this.$bus.goalTable.aspect[row].children[val].goal.showInput)
+              return;
+            this.$bus.goalTable.aspect[row].children[val].goal.showInput = true;
           } else {
-            if (this.data.aspect[row].children[val].showInput) return;
-            this.data.aspect[row].children[val].showInput = true;
+            if (this.$bus.goalTable.aspect[row].children[val].showInput) return;
+            this.$bus.goalTable.aspect[row].children[val].showInput = true;
           }
           break;
         case 2:
-          if (isDown){
-            if (this.data.aspect[row].children[val].children[
-              subVal
-            ].goal.showInput) return;
-            this.data.aspect[row].children[val].children[
+          if (isDown) {
+            if (
+              this.$bus.goalTable.aspect[row].children[val].children[subVal]
+                .goal.showInput
+            )
+              return;
+            this.$bus.goalTable.aspect[row].children[val].children[
               subVal
             ].goal.showInput = true;
-          }
-          else{
-            if (this.data.aspect[row].children[val].children[
-              subVal
-            ].showInput) return;
-            this.data.aspect[row].children[val].children[
+          } else {
+            if (
+              this.$bus.goalTable.aspect[row].children[val].children[subVal]
+                .showInput
+            )
+              return;
+            this.$bus.goalTable.aspect[row].children[val].children[
               subVal
             ].showInput = true;
           }
@@ -561,18 +604,18 @@ export default {
     blurItem(type, row, val, subVal = 0, isNode = false) {
       switch (type) {
         case 0:
-          this.data.aspect[row].showInput = false;
-          this.data.aspect[row].goal.showInput = false;
+          this.$bus.goalTable.aspect[row].showInput = false;
+          this.$bus.goalTable.aspect[row].goal.showInput = false;
           break;
         case 1:
-          this.data.aspect[row].children[val].showInput = false;
-          this.data.aspect[row].children[val].goal.showInput = false;
+          this.$bus.goalTable.aspect[row].children[val].showInput = false;
+          this.$bus.goalTable.aspect[row].children[val].goal.showInput = false;
           break;
         case 2:
-          this.data.aspect[row].children[val].children[
+          this.$bus.goalTable.aspect[row].children[val].children[
             subVal
           ].showInput = false;
-          this.data.aspect[row].children[val].children[
+          this.$bus.goalTable.aspect[row].children[val].children[
             subVal
           ].goal.showInput = false;
           break;
@@ -583,23 +626,32 @@ export default {
       if (isNode) {
         let index = 0;
         for (let i = 0; i < row; i++) {
-          if (this.data.aspect[i].children.length === 0) index += 1;
-          for (let j = 0; j < this.data.aspect[i].children.length; j++) {
-            index += this.data.aspect[i].children[j].children.length || 1;
+          if (this.$bus.goalTable.aspect[i].children.length === 0) index += 1;
+          for (
+            let j = 0;
+            j < this.$bus.goalTable.aspect[i].children.length;
+            j++
+          ) {
+            index +=
+              this.$bus.goalTable.aspect[i].children[j].children.length || 1;
           }
         }
         for (let i = 0; i < val; i++) {
-          index += this.data.aspect[row].children[i].children.length || 1;
+          index +=
+            this.$bus.goalTable.aspect[row].children[i].children.length || 1;
         }
         index += subVal;
-        if (this.data.goalTree[index][0]) {
-          this.data.goalTree[index][0][0].desc =
-            this.data.aspect[row].children[val].children[subVal].goal.text;
+        if (this.$bus.goalTable.goalTree[index][0]) {
+          this.$bus.goalTable.goalTree[index][0][0].desc =
+            this.$bus.goalTable.aspect[row].children[val].children[
+              subVal
+            ].goal.text;
         } else {
-          this.data.goalTree[index][0] = {
+          this.$bus.goalTable.goalTree[index][0] = {
             0: {
-              desc: this.data.aspect[row].children[val].children[subVal].goal
-                .text,
+              desc: this.$bus.goalTable.aspect[row].children[val].children[
+                subVal
+              ].goal.text,
             },
           };
         }
@@ -619,14 +671,18 @@ export default {
           break;
         case 1:
           item.push({
-            label: `在“${this.data.aspect[info[0]].text}”下添加节点（方面）`,
+            label: `在“${
+              this.$bus.goalTable.aspect[info[0]].text
+            }”下添加节点（方面）`,
             onClick: () => {
               this.addItem(2, info[0]);
             },
             divided: true,
           });
           item.push({
-            label: `在“${this.data.aspect[info[0]].text}”前插入节点（业）`,
+            label: `在“${
+              this.$bus.goalTable.aspect[info[0]].text
+            }”前插入节点（业）`,
             onClick: () => {
               this.addItem(1, info[0]);
             },
@@ -639,10 +695,12 @@ export default {
             divided: true,
           });
           item.push({
-            label: `删除节点“${this.data.aspect[info[0]].text}”（业）`,
+            label: `删除节点“${
+              this.$bus.goalTable.aspect[info[0]].text
+            }”（业）`,
             onClick: () => {
               this.tempMsg = `您确定要删除节点“${
-                this.data.aspect[info[0]].text
+                this.$bus.goalTable.aspect[info[0]].text
               }”（业）吗？`;
               this.tempData = [0, info[0]];
               this.confirmDialog = true;
@@ -652,7 +710,7 @@ export default {
         case 2:
           item.push({
             label: `在“${
-              this.data.aspect[info[0]].children[info[1]].text
+              this.$bus.goalTable.aspect[info[0]].children[info[1]].text
             }”下添加节点（项目）`,
             onClick: () => {
               this.addItem(4, info[0], info[1]);
@@ -661,21 +719,25 @@ export default {
           });
           item.push({
             label: `在“${
-              this.data.aspect[info[0]].children[info[1]].text
+              this.$bus.goalTable.aspect[info[0]].children[info[1]].text
             }”前插入节点（方面）`,
             onClick: () => {
               this.addItem(3, info[0], info[1]);
             },
           });
           item.push({
-            label: `在“${this.data.aspect[info[0]].text}”下添加节点（方面）`,
+            label: `在“${
+              this.$bus.goalTable.aspect[info[0]].text
+            }”下添加节点（方面）`,
             onClick: () => {
               this.addItem(2, info[0]);
             },
             divided: true,
           });
           item.push({
-            label: `在“${this.data.aspect[info[0]].text}”前插入节点（业）`,
+            label: `在“${
+              this.$bus.goalTable.aspect[info[0]].text
+            }”前插入节点（业）`,
             onClick: () => {
               this.addItem(1, info[0]);
             },
@@ -687,10 +749,12 @@ export default {
             },
           });
           item.push({
-            label: `删除节点“${this.data.aspect[info[0]].text}”（业）`,
+            label: `删除节点“${
+              this.$bus.goalTable.aspect[info[0]].text
+            }”（业）`,
             onClick: () => {
               this.tempMsg = `您确定要删除节点“${
-                this.data.aspect[info[0]].text
+                this.$bus.goalTable.aspect[info[0]].text
               }”（业）吗？`;
               this.tempData = [0, info[0]];
               this.confirmDialog = true;
@@ -699,11 +763,11 @@ export default {
           });
           item.push({
             label: `删除节点“${
-              this.data.aspect[info[0]].children[info[1]].text
+              this.$bus.goalTable.aspect[info[0]].children[info[1]].text
             }”（方面）`,
             onClick: () => {
               this.tempMsg = `您确定要删除节点“${
-                this.data.aspect[info[0]].children[info[1]].text
+                this.$bus.goalTable.aspect[info[0]].children[info[1]].text
               }”（方面）吗？`;
               this.tempData = [1, info[0], info[1]];
               this.confirmDialog = true;
@@ -713,7 +777,9 @@ export default {
         case 3:
           item.push({
             label: `在“${
-              this.data.aspect[info[0]].children[info[1]].children[info[2]].text
+              this.$bus.goalTable.aspect[info[0]].children[info[1]].children[
+                info[2]
+              ].text
             }”前插入节点（项目）`,
             onClick: () => {
               this.addItem(5, info[0], info[1], info[2]);
@@ -721,7 +787,7 @@ export default {
           });
           item.push({
             label: `在“${
-              this.data.aspect[info[0]].children[info[1]].text
+              this.$bus.goalTable.aspect[info[0]].children[info[1]].text
             }”下添加节点（项目）`,
             onClick: () => {
               this.addItem(4, info[0], info[1]);
@@ -730,25 +796,27 @@ export default {
           });
           item.push({
             label: `在“${
-              this.data.aspect[info[0]].children[info[1]].text
+              this.$bus.goalTable.aspect[info[0]].children[info[1]].text
             }”前插入节点（方面）`,
             onClick: () => {
               this.addItem(3, info[0], info[1]);
             },
           });
           item.push({
-            label: `在“${this.data.aspect[info[0]].text}”下添加节点（方面）`,
+            label: `在“${
+              this.$bus.goalTable.aspect[info[0]].text
+            }”下添加节点（方面）`,
             onClick: () => {
               this.addItem(2, info[0]);
             },
           });
           item.push({
             label: `删除节点“${
-              this.data.aspect[info[0]].children[info[1]].text
+              this.$bus.goalTable.aspect[info[0]].children[info[1]].text
             }”（方面）`,
             onClick: () => {
               this.tempMsg = `您确定要删除节点“${
-                this.data.aspect[info[0]].children[info[1]].text
+                this.$bus.goalTable.aspect[info[0]].children[info[1]].text
               }”（方面）吗？`;
               this.tempData = [1, info[0], info[1]];
               this.confirmDialog = true;
@@ -756,7 +824,9 @@ export default {
             divided: true,
           });
           item.push({
-            label: `在“${this.data.aspect[info[0]].text}”前插入节点（业）`,
+            label: `在“${
+              this.$bus.goalTable.aspect[info[0]].text
+            }”前插入节点（业）`,
             onClick: () => {
               this.addItem(1, info[0]);
             },
@@ -768,10 +838,12 @@ export default {
             },
           });
           item.push({
-            label: `删除节点“${this.data.aspect[info[0]].text}”（业）`,
+            label: `删除节点“${
+              this.$bus.goalTable.aspect[info[0]].text
+            }”（业）`,
             onClick: () => {
               this.tempMsg = `您确定要删除节点“${
-                this.data.aspect[info[0]].text
+                this.$bus.goalTable.aspect[info[0]].text
               }”（业）吗？`;
               this.tempData = [0, info[0]];
               this.confirmDialog = true;
@@ -780,12 +852,15 @@ export default {
           });
           item.push({
             label: `删除节点“${
-              this.data.aspect[info[0]].children[info[1]].children[info[2]].text
+              this.$bus.goalTable.aspect[info[0]].children[info[1]].children[
+                info[2]
+              ].text
             }”（项目）`,
             onClick: () => {
               this.tempMsg = `您确定要删除节点“${
-                this.data.aspect[info[0]].children[info[1]].children[info[2]]
-                  .text
+                this.$bus.goalTable.aspect[info[0]].children[info[1]].children[
+                  info[2]
+                ].text
               }”（项目）吗？`;
               this.tempData = [2, info[0], info[1], info[2]];
               this.confirmDialog = true;
@@ -907,6 +982,7 @@ export default {
   background-color: #cccccc;
   border-top: none;
   display: flex;
+  font-weight: 700;
 }
 .aspect-body-item div p {
   overflow: hidden;

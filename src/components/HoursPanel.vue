@@ -136,7 +136,6 @@
 
     <!-- 两条分割线 -->
     <div
-      v-if="isHourShow"
       ref="split_line_container1"
       class="split-line-container split-line-container1"
       :style="{ pointerEvents: isDragBlockMove ? 'none' : 'all' }"
@@ -150,7 +149,6 @@
       ></div>
     </div>
     <div
-      v-if="isHourShow"
       ref="split_line_container2"
       class="split-line-container split-line-container2"
       :style="{ pointerEvents: isDragBlockMove ? 'none' : 'all' }"
@@ -196,16 +194,11 @@ export default {
     },
     day: {
       type: Number,
-      default: () => 0,
+      default: () => -1,
     },
     data: {
       type: Object,
       default: () => ({}),
-    },
-    // 是否触发拖动效果
-    isHourShow: {
-      type: Boolean,
-      default: () => true,
     },
     showMenu: {
       type: Boolean,
@@ -230,6 +223,7 @@ export default {
   data() {
     return {
       title: "",
+      basePx: 1,
       totalHeight: 600, // 时间全域高度
       topHeight: 40, // 窗口距离画布的高度
       unitSize: 50, // 实际最小刻度
@@ -270,6 +264,7 @@ export default {
   },
   created() {
     this.changeUnitSize();
+    this.updateBasePx();
   },
   watch: {
     day(val) {
@@ -298,12 +293,6 @@ export default {
         this.setHours();
       }, 500);
     },
-    isHourShow: {
-      handler() {
-        this.changeUnitSize();
-      },
-      immediate: true,
-    },
   },
   mounted() {
     const that = this;
@@ -318,6 +307,11 @@ export default {
     };
   },
   methods: {
+    updateBasePx() {
+      this.basePx = parseFloat(
+        document.getElementsByTagName("html")[0].style.fontSize.split("px")[0]
+      );
+    },
     setHours() {
       let startTime = +this.$refs.hours_start.value;
       let endTime = +this.$refs.hours_end.value;
@@ -360,9 +354,6 @@ export default {
     dragOver(event, type) {
       event.preventDefault();
       event.stopPropagation();
-      let basePx = parseFloat(
-        document.getElementsByTagName("html")[0].style.fontSize.split("px")[0]
-      );
       if (this.canSplitMove) {
         let splitDom1 = this.$refs.split_line_container1;
         let splitDom2 = this.$refs.split_line_container2;
@@ -376,36 +367,37 @@ export default {
           this.$refs.task_panel_level3.getBoundingClientRect().width;
         if (this.aplitLineOrder === 1) {
           let split1Left = event.offsetX;
-          let leftLimt = (106 / 16) * basePx; // 56 + 50
-          let rightLimt = (456 / 16) * basePx; // 500 + 56 - 50 * 2
+          let leftLimt = (106 / 16) * this.basePx; // 56 + 50
+          let rightLimt = (456 / 16) * this.basePx; // 500 + 56 - 50 * 2
           if (split1Left < leftLimt) split1Left = leftLimt;
           if (split1Left > rightLimt) split1Left = rightLimt;
           splitDom1.style.left = split1Left + "px";
-          level1Dom.style.width = split1Left - (56 / 16) * basePx + "px";
+          level1Dom.style.width = split1Left - (56 / 16) * this.basePx + "px";
           level2Dom.style.width =
-            (556 / 16) * basePx - split1Left - level3Width + "px"; // 500 - (split1Left - 56) - level3Width
-          splitDom2.style.left = (556 / 16) * basePx - level3Width + "px"; // 500 + 56 - level3Width
+            (556 / 16) * this.basePx - split1Left - level3Width + "px"; // 500 - (split1Left - 56) - level3Width
+          splitDom2.style.left = (556 / 16) * this.basePx - level3Width + "px"; // 500 + 56 - level3Width
         }
         if (this.aplitLineOrder === 2) {
           let split1Left = event.offsetX;
-          let leftLimt = (156 / 16) * basePx; // 56 + 50 + 50
-          let rightLimt = (506 / 16) * basePx; // 500 + 56 - 50
+          let leftLimt = (156 / 16) * this.basePx; // 56 + 50 + 50
+          let rightLimt = (506 / 16) * this.basePx; // 500 + 56 - 50
           if (split1Left < leftLimt) split1Left = leftLimt;
           if (split1Left > rightLimt) split1Left = rightLimt;
           splitDom2.style.left = split1Left + "px";
-          let newLevel2Width = split1Left - (56 / 16) * basePx - level1Width;
+          let newLevel2Width =
+            split1Left - (56 / 16) * this.basePx - level1Width;
           newLevel2Width =
-            newLevel2Width < (50 / 16) * basePx
-              ? (50 / 16) * basePx
+            newLevel2Width < (50 / 16) * this.basePx
+              ? (50 / 16) * this.basePx
               : newLevel2Width;
           level2Dom.style.width = newLevel2Width + "px";
-          if (newLevel2Width === (50 / 16) * basePx) {
+          if (newLevel2Width === (50 / 16) * this.basePx) {
             level1Dom.style.width =
-              split1Left - (56 / 16) * basePx - level2Width + "px";
+              split1Left - (56 / 16) * this.basePx - level2Width + "px";
           }
           level1Width =
             this.$refs.task_panel_level1.getBoundingClientRect().width;
-          splitDom1.style.left = level1Width + (56 / 16) * basePx + "px";
+          splitDom1.style.left = level1Width + (56 / 16) * this.basePx + "px";
         }
       } else {
         let width = 0;
@@ -415,7 +407,7 @@ export default {
           width = this.$refs.task_panel_level1.getBoundingClientRect().width;
           leftLimit1 =
             this.$refs.task_panel_level1.getBoundingClientRect().left;
-          timeLeft = -(56 / 16) * basePx;
+          timeLeft = -(56 / 16) * this.basePx;
         }
         if (this.dragTaskInfo.taskLevel === "level2") {
           width = this.$refs.task_panel_level2.getBoundingClientRect().width;
@@ -423,13 +415,13 @@ export default {
             this.$refs.task_panel_level2.getBoundingClientRect().left;
           timeLeft =
             -this.$refs.task_panel_level1.getBoundingClientRect().width -
-            (56 / 16) * basePx;
+            (56 / 16) * this.basePx;
         }
         let top =
           event.clientY -
-          (this.topHeight / 16) * basePx -
-          (50 / 16) * basePx -
-          (this.unitSize / 32) * basePx +
+          (this.topHeight / 16) * this.basePx -
+          (50 / 16) * this.basePx -
+          (this.unitSize / 32) * this.basePx +
           this.$refs.canvas.scrollTop;
         let toDaysConfig = {
           type,
@@ -437,7 +429,7 @@ export default {
           width,
           leftLimit1,
           timeLeft,
-          height: (this.unitSize / 16) * basePx,
+          height: (this.unitSize / 16) * this.basePx,
           event,
         };
         let containerHeight =
@@ -449,14 +441,11 @@ export default {
     dragEnd(event) {
       this.canSplitMove = false;
       this.$emit("moveAreaChange", { type: "hidden" });
-      let basePx = parseFloat(
-        document.getElementsByTagName("html")[0].style.fontSize.split("px")[0]
-      );
       let top =
         event.clientY -
-        (this.topHeight / 16) * basePx -
-        (50 / 16) * basePx -
-        (this.unitSize / 32) * basePx;
+        (this.topHeight / 16) * this.basePx -
+        (50 / 16) * this.basePx -
+        (this.unitSize / 32) * this.basePx;
       if (top < 0) {
         top = 0;
       }
@@ -464,7 +453,7 @@ export default {
         id: this.dragTaskInfo.taskId,
         index: this.dragTaskInfo.taskDay,
         text: this.dragTaskInfo.text,
-        height: (this.unitSize / 16) * basePx,
+        height: (this.unitSize / 16) * this.basePx,
         top: top,
         hasDone: false,
         type: this.dragTaskInfo.taskLevel,
@@ -568,17 +557,12 @@ export default {
           this.showLevel3MoveDiv = true;
           this.$nextTick(() => {
             if (this.$refs.level_3_move_container) {
-              let basePx = parseFloat(
-                document
-                  .getElementsByTagName("html")[0]
-                  .style.fontSize.split("px")[0]
-              );
               let top =
                 event.clientY -
-                (this.topHeight * 16) / basePx -
-                this.limitSize / 2;
+                (this.topHeight * 16) / this.basePx -
+                (50 / 16) * this.basePx;
               this.$refs.level_3_move_container.style.height =
-                this.limitSize + "px";
+                (this.unitSize / 16) * this.basePx + "px";
               this.$refs.level_3_move_container.style.top = top + "px";
               this.getPlanPanelInfo();
               this.curMoveData.left = -(
@@ -587,7 +571,7 @@ export default {
                 56
               );
               this.curMoveData.top = top;
-              this.curMoveData.height = this.limitSize;
+              this.curMoveData.height = (this.unitSize / 16) * this.basePx;
               let containerHeight =
                 this.$refs.plan_panel_canvas.getBoundingClientRect().height;
               this.chartToTime(this.curMoveData, containerHeight, this.clocks);
@@ -599,15 +583,15 @@ export default {
     },
     level3MouseMove(event) {
       if (this.$refs.level_3_move_container) {
-        let basePx = parseFloat(
-          document.getElementsByTagName("html")[0].style.fontSize.split("px")[0]
-        );
         let top =
-          event.clientY - (this.topHeight * 16) / basePx - this.limitSize / 2;
-        this.$refs.level_3_move_container.style.height = this.limitSize + "px";
+          event.clientY -
+          (this.topHeight * 16) / this.basePx -
+          (50 / 16) * this.basePx;
+        this.$refs.level_3_move_container.style.height =
+          (this.unitSize / 16) * this.basePx + "px";
         this.$refs.level_3_move_container.style.top = top + "px";
         this.curMoveData.top = top;
-        this.curMoveData.height = this.limitSize;
+        this.curMoveData.height = (this.unitSize / 16) * this.basePx;
 
         let containerHeight =
           this.$refs.plan_panel_canvas.getBoundingClientRect().height;
@@ -615,15 +599,14 @@ export default {
       }
     },
     level3MouseUp(event) {
-      let basePx = parseFloat(
-        document.getElementsByTagName("html")[0].style.fontSize.split("px")[0]
-      );
       let top =
-        event.clientY - (this.topHeight * 16) / basePx - this.limitSize / 2;
+        event.clientY -
+        (this.topHeight * 16) / this.basePx -
+        (50 / 16) * this.basePx;
       let tab = {
         id: Math.random().toFixed(6),
         text: "新建任务",
-        height: this.limitSize,
+        height: (this.unitSize / 16) * this.basePx,
         top: top < 0 ? 0 : top,
         hasDone: false,
         type: "level3",
@@ -691,25 +674,66 @@ export default {
     },
     // 时间域、屏幕高度改变
     changeUnitSize() {
-      let basePx = parseFloat(
-        document.getElementsByTagName("html")[0].style.fontSize.split("px")[0]
-      );
-      this.topHeight = 3.125 * basePx;
-      this.totalHeight = document.documentElement.clientHeight - 8.125 * basePx;
+      this.topHeight = 3.125 * this.basePx;
+      this.totalHeight =
+        document.documentElement.clientHeight - 8.125 * this.basePx;
       if (this.clocks[0] < 7 && this.clocks[1] === 24) {
         let unitSize = this.totalHeight / (24 - 7);
         this.totalHeight =
-          (unitSize / 16) * basePx * (this.clocks[1] - this.clocks[0]);
+          (unitSize / 16) * this.basePx * (this.clocks[1] - this.clocks[0]);
       }
       // 最小刻度处理
       // this.limitUnitSize();
       this.unitSize =
-        ((this.totalHeight / (this.clocks[1] - this.clocks[0])) * 16) / basePx;
-      this.limitSize = ((this.unitSize / 16) * basePx * 30) / 60;
-      // 拖拽线恢复
-      if (this.isHourShow) {
-        this.toReSetSplit();
+        ((this.totalHeight / (this.clocks[1] - this.clocks[0])) * 16) /
+        this.basePx;
+      this.unitSize = this.unitSize < 25 ? 25 : this.unitSize;
+      this.limitSize = ((this.unitSize / 16) * this.basePx * 30) / 60;
+      if (this.day != -1) {
+        this.level1Tabs.map((item, i) => {
+          let hour = parseInt(this.level1Tabs[i].startTime.split(":")[0]);
+          let minute = parseInt(this.level1Tabs[i].startTime.split(":")[1]);
+          let blocks = minute / 60 + hour - this.clocks[0];
+          this.level1Tabs[i].top =
+            ((blocks * this.unitSize) / 16) * this.basePx;
+          let endHour = parseInt(this.level1Tabs[i].endTime.split(":")[0]);
+          let endMinute = parseInt(this.level1Tabs[i].endTime.split(":")[1]);
+          let endBlocks = endMinute / 60 + endHour - minute / 60 - hour;
+          this.level1Tabs[i].height =
+            ((endBlocks * this.unitSize) / 16) * this.basePx;
+        });
+        this.level2Tabs.map((item, i) => {
+          let hour = parseInt(this.level2Tabs[i].startTime.split(":")[0]);
+          let minute = parseInt(this.level2Tabs[i].startTime.split(":")[1]);
+          let blocks = minute / 60 + hour - this.clocks[0];
+          this.level2Tabs[i].top =
+            ((blocks * this.unitSize) / 16) * this.basePx;
+          let endHour = parseInt(this.level2Tabs[i].endTime.split(":")[0]);
+          let endMinute = parseInt(this.level2Tabs[i].endTime.split(":")[1]);
+          let endBlocks = endMinute / 60 + endHour - minute / 60 - hour;
+          this.level2Tabs[i].height =
+            ((endBlocks * this.unitSize) / 16) * this.basePx;
+        });
+        this.level3Tabs.map((item, i) => {
+          let hour = parseInt(this.level3Tabs[i].startTime.split(":")[0]);
+          let minute = parseInt(this.level3Tabs[i].startTime.split(":")[1]);
+          let blocks = minute / 60 + hour - this.clocks[0];
+          this.level3Tabs[i].top =
+            ((blocks * this.unitSize) / 16) * this.basePx;
+          let endHour = parseInt(this.level3Tabs[i].endTime.split(":")[0]);
+          let endMinute = parseInt(this.level3Tabs[i].endTime.split(":")[1]);
+          let endBlocks = endMinute / 60 + endHour - minute / 60 - hour;
+          this.level3Tabs[i].height =
+            ((endBlocks * this.unitSize) / 16) * this.basePx;
+        });
+        this.$bus.goalTable.hoursInfo[this.day].columns = [
+          this.level1Tabs,
+          this.level2Tabs,
+          this.level3Tabs,
+        ];
+        this.$bus.$emit("save");
       }
+      //this.$bus.$emit("save");
     },
     // limitUnitSize() {
     // 	// 最小刻度30px
@@ -718,22 +742,6 @@ export default {
     // 		this.totalHeight = minTotalHeight;
     // 	}
     // },
-    toReSetSplit() {
-      this.$nextTick(() => {
-        let splitDom1 = this.$refs.split_line_container1;
-        let splitDom2 = this.$refs.split_line_container2;
-        let level1Dom = this.$refs.task_panel_level1;
-        let level2Dom = this.$refs.task_panel_level2;
-        if (!level1Dom) {
-          return;
-        }
-        let level1Width = Number(level1Dom.style.width.replace("px", ""));
-        let level2Width = Number(level2Dom.style.width.replace("px", ""));
-        let split1Left = level1Width + 56 - 2;
-        splitDom1.style.left = split1Left + "px";
-        splitDom2.style.left = level1Width + level2Width + 56 - 2 + "px";
-      });
-    },
   },
 };
 </script>

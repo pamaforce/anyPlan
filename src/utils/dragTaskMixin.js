@@ -11,7 +11,6 @@ export const dragTaskMixin = {
             dragOverConfig: {}, // 拖拽悬停所在元素的信息
             dragTaskInfo: {}, // 被拖拽元素的信息
             isDragBlockMove: false,
-            isHourShow: false,
             showMenu: false,
             tempVal: -1,
         };
@@ -167,7 +166,6 @@ export const dragTaskMixin = {
                 this.$refs.hoursPanel.level2Tabs,
                 this.$refs.hoursPanel.level3Tabs,
             ];
-            console.log([...this.$refs.hoursPanel.level2Tabs]);
             this.$bus.$emit("save");
             this.$refs.mainTable.$forceUpdate();
         },
@@ -195,20 +193,6 @@ export const dragTaskMixin = {
             // 发送后台请求
             this.curRightClickTd.setAttribute("data-is-main", !config.isMain);
             this.showMenu = false;
-        },
-        openHours() {
-            this.showMenu = false;
-            this.isHourShow = true;
-            this.$refs.hours_panel.$refs.plan_panel_div.style.transition =
-                "right 0.4s";
-            this.$refs.hours_panel.$refs.plan_panel_div.style.right = "0px";
-            var year = this.curRightClickTd.getAttribute("data-year");
-            var month = this.curRightClickTd.getAttribute("data-month");
-            var date = this.curRightClickTd.getAttribute("data-date");
-            this.hourInfo.title = `${year}-${month}-${date}`;
-            // this.hourInfo.start = 7
-            // this.hourInfo.end = 24
-            this.hourInfo = JSON.parse(JSON.stringify(this.hourInfo));
         },
     },
 };
