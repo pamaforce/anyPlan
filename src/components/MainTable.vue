@@ -1629,6 +1629,7 @@ export default {
                 });
               } else {
                 if (tempNo !== 0) {
+                  tempCnt--;
                   let y = tempList[tempList.length - 1];
                   tempList[tempList.length - 1] = {
                     text: y.text,
@@ -1860,8 +1861,6 @@ export default {
     },
     //输入框失焦
     blurItem(type, row, val) {
-      console.log(type, row, val);
-      console.log(this.currentDepth);
       let depth = 8 - this.currentDepth;
       if (type === "down") {
         depth++;
