@@ -463,7 +463,7 @@ export default {
         showClose: false,
         duration: 2500,
       });
-      this.$emit("save", true);
+      this.$bus.$emit("save");
     },
     deleteItem(type, ...info) {
       let temp = "成功删除一条数据";
@@ -547,7 +547,7 @@ export default {
         showClose: false,
         duration: 2500,
       });
-      this.$emit("save", true);
+      this.$bus.$emit("save");
     },
     clickItem(type, row, val, subVal = 0, isDown = false) {
       switch (type) {
@@ -656,7 +656,8 @@ export default {
           };
         }
       }
-      this.$emit("save", true);
+      this.$forceUpdate();
+      this.$bus.$emit("save");
     },
     onContextmenu(event, ...info) {
       let item = [];

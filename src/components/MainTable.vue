@@ -1790,6 +1790,7 @@ export default {
           }
         });
         this.initBodyStyle(i, 0);
+        this.updateTableWidth();
       }
     },
     //初始化行样式
@@ -1813,7 +1814,7 @@ export default {
               j;
           }
         });
-        this.initBodyStyle(i, 0);
+        this.$forceUpdate();
       }
     },
     //点击单元格
@@ -1960,6 +1961,7 @@ export default {
       for (let i = 0; i < this.$bus.goalTable.goalTree.length; i++) {
         this.initBodyStyle(i, this.indexList[8 - this.currentDepth]);
       }
+      this.$refs.tableBody.scrollLeft += 0.1;
     },
     //处理Body滚动
     handleScroll() {

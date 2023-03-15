@@ -6,7 +6,6 @@
         <pane :size="percent">
           <AspectTable
             ref="aspectTable"
-            @save="saveData"
             @scroll="handleLeftScroll"
             :state="state"
             :hasAni="ani"
@@ -17,7 +16,6 @@
             :hasAni="ani"
             :hasAni2="ani2"
             :showHours="showHours"
-            @save="saveData"
             @scroll="handleRightScroll"
             @state="handleDepthChange"
             @showHours="handleShowHours"
@@ -98,15 +96,7 @@ export default {
   methods: {
     exportData() {
       this.title = "请点击复制";
-      this.content =
-        window.localStorage.getItem(this.storageKey) ||
-        JSON.stringify({
-          initialTimeStamp: 536428800000,
-          state: 0,
-          aspect: [],
-          goalTree: [],
-          hoursInfo: {},
-        });
+      this.content = JSON.stringify(this.$bus.goalTable);
       this.exportDialogVisible = true;
     },
     getContent() {
@@ -129,7 +119,8 @@ export default {
     importData() {
       let ret = prompt("请输入正确格式的Json格式字符串数据");
       if (ret !== null && ret != "") {
-        window.localStorage.setItem(this.storageKey, ret);
+        this.$bus.goalTable = JSON.parse(ret);
+        this.$bus.$emit("save");
         Notification.success({
           title: "成功",
           message: "导入数据成功",
@@ -157,39 +148,8 @@ export default {
     resize() {
       this.$refs.mainTable.updateTableWidth();
     },
-    getData() {
-      this.$bus.goalTable = JSON.parse(
-        window.localStorage.getItem(this.storageKey) ||
-          JSON.stringify({
-            initialTimeStamp: 536428800000,
-            state: 0,
-            aspect: [],
-            goalTree: [],
-            hoursInfo: {},
-          })
-      );
+    updateViewByData() {
       console.log(this.$bus.goalTable);
-      this.$bus.$on("save", () => {
-        console.log("已保存");
-        window.localStorage.setItem(
-          this.storageKey,
-          JSON.stringify(this.$bus.goalTable)
-        );
-      });
-      this.state = this.$bus.goalTable.state;
-      if (this.state > 5) this.state = 5;
-      this.changeState(this.state);
-    },
-    saveData(val, needTableUpdate = true) {
-      window.localStorage.setItem(
-        this.storageKey,
-        JSON.stringify({ ...this.$bus.goalTable, state: this.state })
-      );
-      if (needTableUpdate) {
-        this.$refs.aspectTable.$forceUpdate();
-        if (val) this.$refs.mainTable.initBodyLine();
-        this.$refs.mainTable.$forceUpdate();
-      }
     },
     clearData() {
       this.$bus.goalTable = {
@@ -200,7 +160,7 @@ export default {
         hoursInfo: {},
       };
       this.state = 0;
-      this.saveData();
+      this.$bus.$emit("save");
     },
     changeState(val) {
       switch (val) {
@@ -300,7 +260,6 @@ export default {
           break;
       }
       this.state = val;
-      this.saveData(false, false);
     },
     switchAni(val = 1) {
       switch (val) {
@@ -377,12 +336,6 @@ export default {
       });
       return false;
     },
-    // handleLeftInput(val) {
-    //   this.$refs.mainTable.canInput = val;
-    // },
-    // handleRightInput(val) {
-    //   this.$refs.aspectTable.canInput = val;
-    // },
     handleLeftScroll(val) {
       this.$refs.mainTable.updateScroll(val);
     },
@@ -397,7 +350,8 @@ export default {
     },
   },
   created() {
-    this.getData();
+    this.state = 5;
+    this.changeState(this.state);
   },
 };
 </script>
