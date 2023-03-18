@@ -486,6 +486,12 @@ export default {
     },
     stopClearActive() {
       this.isClearActive = false;
+      this.$bus.goalTable.hoursInfo[this.day].columns = [
+        this.level1Tabs,
+        this.level2Tabs,
+        this.level3Tabs,
+      ];
+      this.$bus.$emit("save");
     },
     getPlanPanelInfo() {
       if (this.$refs.task_panel_level1) {
@@ -990,5 +996,8 @@ export default {
   height: 1px;
   background: green;
   z-index: 1000;
+}
+.plan-close {
+  cursor: pointer;
 }
 </style>

@@ -142,8 +142,10 @@ export default {
         };
       }
       this.tempInfo = { ...this.$bus.goalTable.hoursInfo[e] };
-      console.log(e, this.tempInfo);
-      this.showHours = true;
+      this.showHours = false;
+      this.$nextTick(() => {
+        this.showHours = true;
+      });
     },
     resize() {
       this.$refs.mainTable.updateTableWidth();

@@ -13,6 +13,7 @@ if (Vue.prototype.$websocket) Vue.prototype.$websocket.close();
 Vue.prototype.$websocket = new WebSocket(`ws://101.43.190.196:9090/ws`);
 let demo = null;
 Vue.prototype.$websocket.onmessage = (evt) => {
+    if (evt.data === JSON.stringify(Vue.prototype.$bus.goalTable)) return;
     Vue.prototype.$bus.goalTable = JSON.parse(
         evt.data ||
         JSON.stringify({
@@ -31,9 +32,13 @@ Vue.prototype.$websocket.onmessage = (evt) => {
         }).$mount("#app");
     } else {
         let mainTable = demo.$children[0].$refs.mainTable;
-        if (mainTable) mainTable.initData();
+        if (mainTable) mainTable.updateData();
         let aspectTable = demo.$children[0].$refs.aspectTable;
         if (aspectTable) aspectTable.$forceUpdate();
+        demo.$children[0].tempInfo = {
+            ...Vue.prototype.$bus.goalTable.hoursInfo[demo.$children[0].tempDay],
+        };
+        demo.$children[0].$refs.hoursPanel.$forceUpdate();
     }
 };
 Vue.prototype.$bus.$on("save", () => {
