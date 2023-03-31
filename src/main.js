@@ -44,6 +44,9 @@ Vue.prototype.$websocket.onmessage = (evt) => {
 Vue.prototype.$bus.$on("save", () => {
     console.log("已保存");
     if (Vue.prototype.$websocket.readyState === 1) {
-        Vue.prototype.$websocket.send(JSON.stringify(Vue.prototype.$bus.goalTable));
+        console.log("已上传数据如下");
+        let str = JSON.stringify(Vue.prototype.$bus.goalTable);
+        console.log(Vue.prototype.$bus.goalTable);
+        Vue.prototype.$websocket.send(str);
     }
 });

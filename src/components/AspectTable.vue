@@ -463,6 +463,8 @@ export default {
         showClose: false,
         duration: 2500,
       });
+      this.$forceUpdate();
+      this.$parent.$parent.$parent.$refs.mainTable.updateData();
       this.$bus.$emit("save");
     },
     deleteItem(type, ...info) {
@@ -541,12 +543,15 @@ export default {
           break;
       }
       this.confirmDialog = false;
+      console.log(this.$bus.goalTable);
       Notification.success({
         title: "删除成功",
         message: temp,
         showClose: false,
         duration: 2500,
       });
+      this.$forceUpdate();
+      this.$parent.$parent.$parent.$refs.mainTable.updateData();
       this.$bus.$emit("save");
     },
     clickItem(type, row, val, subVal = 0, isDown = false) {

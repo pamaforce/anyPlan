@@ -445,7 +445,6 @@ export default {
           }
         });
       }
-      //this.$forceUpdate();
     },
     //点击Header底部事件处理
     subToAni(val) {
@@ -644,8 +643,8 @@ export default {
         (val / this.supList.length) * this.supPrevList.length
       );
       this.baseOffset = width * percent;
-      this.left = 0;
-      this.marginLeft = width * percent;
+      this.left = width * percent;
+      this.marginLeft = 0;
       this.$refs.tableBody.scrollLeft = this.baseOffset * this.basePx;
       setTimeout(() => {
         if (this.hasAni2) {
@@ -1813,45 +1812,71 @@ export default {
     updateData() {
       for (let i = 0; i < this.$bus.goalTable.goalTree.length; i++) {
         let temp = this.fetchBodyData(this.currentDepth, i);
-        this.supListBody[i].map((item, j) => {
-          this.supListBody[i][j].text = temp[j].text;
-          this.supListBody[i][j].hide = temp[j].hide;
-          this.supListBody[i][j].isAssigned = temp[j].isAssigned;
-          this.supListBody[i][j].finish = temp[j].finish;
-          this.supListBody[i][j].bold = temp[j].bold;
-        });
-        this.supListBody_dom[i].map((item, j) => {
-          this.supListBody_dom[i][j].text =
-            temp[this.supListBody_dom[i][j].index].text;
-          this.supListBody_dom[i][j].hide =
-            temp[this.supListBody_dom[i][j].index].hide;
-          this.supListBody_dom[i][j].isAssigned =
-            temp[this.supListBody_dom[i][j].index].isAssigned;
-          this.supListBody_dom[i][j].finish =
-            temp[this.supListBody_dom[i][j].index].finish;
-          this.supListBody_dom[i][j].bold =
-            temp[this.supListBody_dom[i][j].index].bold;
-        });
+        if (!this.supListBody[i]) this.supListBody[i] = temp;
+        else
+          this.supListBody[i].map((item, j) => {
+            this.supListBody[i][j].text = temp[j].text;
+            this.supListBody[i][j].hide = temp[j].hide;
+            this.supListBody[i][j].isAssigned = temp[j].isAssigned;
+            this.supListBody[i][j].finish = temp[j].finish;
+            this.supListBody[i][j].bold = temp[j].bold;
+          });
+        if (!this.supListBody_dom[i]) {
+          this.supListBody_dom[i] = [];
+          this.supListBody[i].map((item, j) => {
+            if (!item.hide) {
+              this.supListBody_dom[i].push(item);
+              this.supListBody_dom[i][
+                this.supListBody_dom[i].length - 1
+              ].index = j;
+            }
+          });
+        } else
+          this.supListBody_dom[i].map((item, j) => {
+            this.supListBody_dom[i][j].text =
+              temp[this.supListBody_dom[i][j].index].text;
+            this.supListBody_dom[i][j].hide =
+              temp[this.supListBody_dom[i][j].index].hide;
+            this.supListBody_dom[i][j].isAssigned =
+              temp[this.supListBody_dom[i][j].index].isAssigned;
+            this.supListBody_dom[i][j].finish =
+              temp[this.supListBody_dom[i][j].index].finish;
+            this.supListBody_dom[i][j].bold =
+              temp[this.supListBody_dom[i][j].index].bold;
+          });
         temp = this.fetchBodyData(this.currentDepth - 1, i);
-        this.subListBody[i].map((item, j) => {
-          this.subListBody[i][j].text = temp[j].text;
-          this.subListBody[i][j].hide = temp[j].hide;
-          this.subListBody[i][j].isAssigned = temp[j].isAssigned;
-          this.subListBody[i][j].finish = temp[j].finish;
-          this.subListBody[i][j].bold = temp[j].bold;
-        });
-        this.subListBody_dom[i].map((item, j) => {
-          this.subListBody_dom[i][j].text =
-            temp[this.subListBody_dom[i][j].index].text;
-          this.subListBody_dom[i][j].hide =
-            temp[this.subListBody_dom[i][j].index].hide;
-          this.subListBody_dom[i][j].isAssigned =
-            temp[this.subListBody_dom[i][j].index].isAssigned;
-          this.subListBody_dom[i][j].finish =
-            temp[this.subListBody_dom[i][j].index].finish;
-          this.subListBody_dom[i][j].bold =
-            temp[this.subListBody_dom[i][j].index].bold;
-        });
+        if (!this.subListBody[i]) this.subListBody[i] = temp;
+        else
+          this.subListBody[i].map((item, j) => {
+            this.subListBody[i][j].text = temp[j].text;
+            this.subListBody[i][j].hide = temp[j].hide;
+            this.subListBody[i][j].isAssigned = temp[j].isAssigned;
+            this.subListBody[i][j].finish = temp[j].finish;
+            this.subListBody[i][j].bold = temp[j].bold;
+          });
+        if (!this.subListBody_dom[i]) {
+          this.subListBody_dom[i] = [];
+          this.subListBody[i].map((item, j) => {
+            if (!item.hide) {
+              this.subListBody_dom[i].push(item);
+              this.subListBody_dom[i][
+                this.subListBody_dom[i].length - 1
+              ].index = j;
+            }
+          });
+        } else
+          this.subListBody_dom[i].map((item, j) => {
+            this.subListBody_dom[i][j].text =
+              temp[this.subListBody_dom[i][j].index].text;
+            this.subListBody_dom[i][j].hide =
+              temp[this.subListBody_dom[i][j].index].hide;
+            this.subListBody_dom[i][j].isAssigned =
+              temp[this.subListBody_dom[i][j].index].isAssigned;
+            this.subListBody_dom[i][j].finish =
+              temp[this.subListBody_dom[i][j].index].finish;
+            this.subListBody_dom[i][j].bold =
+              temp[this.subListBody_dom[i][j].index].bold;
+          });
         this.initBodyStyle(i, 0);
         this.updateTableWidth();
       }
