@@ -321,6 +321,7 @@ export default {
     marginLeft: 0,
     left: 0,
     speed: 1,
+    beforeLeft: 0,
   }),
   methods: {
     updateBasePx() {
@@ -334,66 +335,117 @@ export default {
     //处理Body横向滚动
     handleScrollX() {
       if (this.pauseScroll) return;
+      let isRight = this.beforeLeft < this.$refs.tableBody.scrollLeft;
+      this.beforeLeft = this.$refs.tableBody.scrollLeft;
+      this.beforeLeft;
       let left =
         this.$refs.tableBody.scrollLeft / this.basePx - this.baseOffset;
       this.marginLeft = left;
+      let cntH = [],
+        cntS = [];
       this.supList.map((item, i) => {
         this.supList[i].marginLeft = -left;
         let temp = this.supList[i].left - left;
         let hide = temp > 120 || temp < -120;
+        if (this.supList[i].hide !== hide) {
+          if (hide) cntH.push(i);
+          else cntS.push(i);
+        }
         this.supList[i].hide = hide;
       });
+      cntH.map(() => {
+        if (isRight) this.supList_dom.shift();
+        else this.supList_dom.pop();
+      });
+      cntS.map((item) => {
+        if (isRight) {
+          this.supList_dom.push(this.supList[item]);
+          this.supList_dom[this.supList_dom.length - 1].index = item;
+        } else {
+          this.supList_dom.unshift(this.supList[item]);
+          this.supList_dom[0].index = item;
+        }
+      });
+      cntH = [];
+      cntS = [];
       this.subList.map((item, i) => {
         this.subList[i].marginLeft = -left;
         let temp = this.subList[i].left - left;
         let hide = temp > 120 || temp < -120;
+        if (this.subList[i].hide !== hide) {
+          if (hide) cntH.push(i);
+          else cntS.push(i);
+        }
         this.subList[i].hide = hide;
       });
-      this.supList_dom = [];
-      this.supList.map((item, i) => {
-        if (!item.hide) {
-          this.supList_dom.push(item);
-          this.supList_dom[this.supList_dom.length - 1].index = i;
-        }
+      cntH.map(() => {
+        if (isRight) this.subList_dom.shift();
+        else this.subList_dom.pop();
       });
-      this.subList_dom = [];
-      this.subList.map((item, i) => {
-        if (!item.hide) {
-          this.subList_dom.push(item);
-          this.subList_dom[this.subList_dom.length - 1].index = i;
+      cntS.map((item) => {
+        if (isRight) {
+          this.subList_dom.push(this.subList[item]);
+          this.subList_dom[this.subList_dom.length - 1].index = item;
+        } else {
+          this.subList_dom.unshift(this.subList[item]);
+          this.subList_dom[0].index = item;
         }
       });
       for (let j = 0; j < this.$bus.goalTable.goalTree.length; j++) {
+        cntH = [];
+        cntS = [];
         this.supListBody[j].map((item, i) => {
           this.supListBody[j][i].marginLeft = -left;
           let temp = this.supListBody[j][i].left - left;
           let hide = temp > 120 || temp < -120;
+          if (this.supListBody[j][i].hide !== hide) {
+            if (hide) cntH.push(i);
+            else cntS.push(i);
+          }
           this.supListBody[j][i].hide = hide;
         });
+        cntH.map(() => {
+          if (isRight) this.supListBody_dom[j].shift();
+          else this.supListBody_dom[j].pop();
+        });
+        cntS.map((item) => {
+          if (isRight) {
+            this.supListBody_dom[j].push(this.supListBody[j][item]);
+            this.supListBody_dom[j][this.supListBody_dom[j].length - 1].index =
+              item;
+          } else {
+            this.supListBody_dom[j].unshift(this.supListBody[j][item]);
+            this.supListBody_dom[j][0].index = item;
+          }
+        });
+        cntH = [];
+        cntS = [];
         this.subListBody[j].map((item, i) => {
           this.subListBody[j][i].marginLeft = -left;
           let temp = this.subListBody[j][i].left - left;
           let hide = temp > 120 || temp < -120;
+          if (this.subListBody[j][i].hide !== hide) {
+            if (hide) cntH.push(i);
+            else cntS.push(i);
+          }
           this.subListBody[j][i].hide = hide;
         });
-        this.supListBody_dom[j] = [];
-        this.supListBody[j].map((item, i) => {
-          if (!item.hide) {
-            this.supListBody_dom[j].push(item);
-            this.supListBody_dom[j][this.supListBody_dom[j].length - 1].index =
-              i;
-          }
+        cntH.map(() => {
+          if (isRight) this.subListBody_dom[j].shift();
+          else this.subListBody_dom[j].pop();
         });
-        this.subListBody_dom[j] = [];
-        this.subListBody[j].map((item, i) => {
-          if (!item.hide) {
-            this.subListBody_dom[j].push(item);
+        cntS.map((item) => {
+          if (isRight) {
+            this.subListBody_dom[j].push(this.subListBody[j][item]);
             this.subListBody_dom[j][this.subListBody_dom[j].length - 1].index =
-              i;
+              item;
+          } else {
+            this.subListBody_dom[j].unshift(this.subListBody[j][item]);
+            this.subListBody_dom[j][0].index = item;
           }
         });
       }
-      this.$forceUpdate();
+      //this.$forceUpdate();
     },
     //点击Header底部事件处理
     subToAni(val) {
@@ -940,13 +992,17 @@ export default {
               }
               while (tempBase + 7 <= totalDay) {
                 nD = tD + 6;
-                let cFlag = nowDate.getDate() >= tD;
+                let cFlag = nowDate.getDate() >= tD,
+                  tFlag = false;
                 if (nD > tempArr[tM]) {
                   nD -= tempArr[tM];
                   tM++;
                   cFlag = true;
+                  tFlag = true;
                 }
-                cFlag = cFlag && nowDate.getDate() <= nD;
+                cFlag = tFlag
+                  ? cFlag || nowDate.getDate() <= nD
+                  : cFlag && nowDate.getDate() <= nD;
                 tempBase += 7;
                 tempList.push({
                   text: `第${tempF++}周 ${tD + "号-" + nD + "号"}`,
@@ -957,7 +1013,9 @@ export default {
                   hide: isFar,
                   current:
                     nowDate.getFullYear() == tempYear &&
-                    nowDate.getMonth() == tM &&
+                    (tFlag
+                      ? nowDate.getMonth() + 1 == tM
+                      : nowDate.getMonth() == tM) &&
                     cFlag,
                   yearGroup: tempYear,
                   yearDays: totalDay,
