@@ -1013,7 +1013,9 @@ export default {
                   current:
                     nowDate.getFullYear() == tempYear &&
                     (tFlag
-                      ? nowDate.getMonth() + 1 == tM
+                      ? nowDate.getDate() <= nD
+                        ? nowDate.getMonth() == tM
+                        : nowDate.getMonth() + 1 == tM
                       : nowDate.getMonth() == tM) &&
                     cFlag,
                   yearGroup: tempYear,
